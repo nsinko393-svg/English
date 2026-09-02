@@ -1,0 +1,4478 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111214">
+<title>WordMap — карта знання англійської</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗺️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111214; --surf:#2b2c2f; --surf2:#1c1d20; --surf3:#3a3b3f;
+  --line:#3d3e42; --text:#fff; --muted:#a3a5a9; --dim:#75777c;
+  --cyan:#25c9de; --cyan-d:#1ba9bd;
+  --violet:#c026f5; --violet-l:#cf7bff;
+  --gold:#f0b429; --good:#3fbf6f; --bad:#e0555a;
+  --r:14px; --side:236px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Poppins,'Segoe UI',-apple-system,Roboto,Arial,sans-serif;
+  font-size:15px;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  /* прибирає 300мс затримку перед tap і випадковий подвійний тап-зум на
+     кнопках/картках у мобільних браузерах (Android Chrome, iOS Safari) */
+  touch-action:manipulation;
+}
+button{font-family:inherit;cursor:pointer}
+
+/* ================= КАРКАС САЙТУ ================= */
+.app{display:flex;min-height:100vh}
+
+.sidebar{
+  width:var(--side);flex-shrink:0;background:var(--surf2);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:20px 14px;
+}
+.logo{font-size:19px;font-weight:700;padding:0 10px 20px;display:flex;align-items:center;gap:9px}
+.logo .mark{
+  width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--cyan),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+.sidenav{display:flex;flex-direction:column;gap:3px;flex:1}
+.sidenav button{
+  display:flex;align-items:center;gap:11px;background:none;border:none;color:var(--muted);
+  padding:11px 12px;border-radius:10px;font-size:14.5px;font-weight:500;text-align:left;width:100%;
+}
+.sidenav button i{font-style:normal;font-size:18px;width:22px;text-align:center}
+.sidenav button:hover{background:var(--surf);color:var(--text)}
+.sidenav button.on{background:var(--cyan);color:#04282d;font-weight:600}
+.sidenav .n{
+  margin-left:auto;background:var(--violet);color:#fff;font-size:11px;font-weight:700;
+  border-radius:999px;padding:2px 7px;min-width:22px;text-align:center;
+}
+.sidenav button.on .n{background:rgba(0,0,0,.25);color:#04282d}
+.side-foot{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.side-stat{display:flex;align-items:center;gap:9px;padding:0 10px;font-size:13px;color:var(--muted)}
+.side-stat b{color:var(--text);font-size:15px}
+
+.content{flex:1;min-width:0;display:flex;flex-direction:column}
+
+.topbar{
+  position:sticky;top:0;z-index:40;background:rgba(17,18,20,.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;
+  padding:14px 28px;padding-top:calc(14px + env(safe-area-inset-top));
+}
+.topbar .tb-title{font-size:20px;font-weight:600;flex:1}
+.topbar .tb-btn{
+  background:var(--surf);border:none;color:var(--text);font-size:19px;width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;border-radius:10px;flex-shrink:0;
+}
+.topbar .tb-btn:hover{background:var(--surf3)}
+.topbar .tb-btn.ghost{display:none}
+.gems{
+  display:flex;align-items:center;gap:7px;background:var(--surf);
+  border-radius:999px;padding:6px 14px 6px 7px;font-weight:600;font-size:14px;flex-shrink:0;
+}
+.gems .g{
+  width:22px;height:22px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#3a2a00;
+}
+
+main{
+  flex:1;padding:18px 24px 36px;
+  padding-left:calc(24px + env(safe-area-inset-left));
+  padding-right:calc(24px + env(safe-area-inset-right));
+  padding-bottom:calc(36px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap.page-enter{animation:pageIn .2s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.wrap.narrow{max-width:720px}
+
+/* Навігація тепер живе на головній сторінці (картки переходу) замість
+   постійної бічної/нижньої панелі — тому й панель, і нижні вкладки сховані
+   на будь-якій ширині екрана. Повернення з розділу — кнопкою «‹» вгорі. */
+.sidebar,.tabbar{display:none !important}
+
+/* ================= БАЗОВІ ЕЛЕМЕНТИ ================= */
+.card{background:var(--surf);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.muted{color:var(--muted);font-size:13.5px}
+.dim{color:var(--dim);font-size:12px}
+.center{text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row.between{justify-content:space-between;align-items:center;flex-wrap:nowrap}
+.row.nowrap{flex-wrap:nowrap}
+.hidden{display:none !important}
+h2{font-size:16px;margin:0 0 8px;font-weight:600}
+h3{font-size:12px;margin:16px 0 8px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+h3:first-child{margin-top:0}
+
+.btn{
+  border:none;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;
+  color:#fff;background:var(--surf3);transition:.15s;
+}
+.btn:hover{filter:brightness(1.14)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.cyan{background:var(--cyan);color:#04282d}
+.btn.violet{background:var(--violet)}
+.btn.wide{width:100%}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{background:var(--surf);border-color:var(--cyan)}
+.btn.sm{padding:8px 13px;font-size:13px}
+.btn.link{background:none;color:var(--muted);font-weight:500;padding:8px}
+.btn.link:hover{color:var(--text)}
+
+input,textarea,select{
+  width:100%;background:var(--surf2);border:1px solid var(--line);color:var(--text);
+  border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--cyan)}
+textarea{min-height:100px;resize:vertical;line-height:1.5}
+label.f{display:block;margin-bottom:10px}
+label.f span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+label.chk{display:flex;align-items:center;gap:9px;font-size:14px;margin-bottom:8px;cursor:pointer}
+label.chk input{width:auto;accent-color:var(--cyan)}
+
+/* сітка колонок для широких екранів */
+.cols{display:grid;gap:10px}
+.cols.c2{grid-template-columns:repeat(2,1fr)}
+.cols.c3{grid-template-columns:repeat(3,1fr)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;align-items:start}
+
+/* картки швидкого переходу на головній сторінці — компактний рядок:
+   іконка зліва, підпис і лічильник справа, замість стовпчика */
+.navcard{
+  background:var(--surf);border:none;border-radius:var(--r);padding:11px 14px;
+  color:var(--text);text-align:left;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;gap:11px;width:100%;font-family:inherit;
+}
+.navcard:hover{background:var(--surf3)}
+.navcard .ic{font-size:20px;flex-shrink:0}
+.navcard .lbl{font-weight:600;font-size:14px;flex:1}
+.navcard .badge{color:var(--cyan);font-size:12px;font-weight:600}
+
+/* згорнутий блок налаштувань на головній — закритий за замовчуванням,
+   щоб не займати місце й не змушувати гортати повз нього щоразу */
+.more-fold{margin-top:14px}
+.more-fold summary{
+  cursor:pointer;list-style:none;font-size:12px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.7px;padding:10px 2px;user-select:none;
+  display:flex;align-items:center;gap:7px;
+}
+.more-fold summary::-webkit-details-marker{display:none}
+.more-fold summary::before{content:'▸';font-size:10px;color:var(--dim);transition:transform .15s}
+.more-fold[open] summary::before{transform:rotate(90deg)}
+.more-fold summary:hover{color:var(--text)}
+
+/* ================= ОБКЛАДИНКА ================= */
+/* Невисока смуга-заголовок замість великого фото — щоб не гортати екран
+   для кожного окремого слова в тріажі/вивченні. */
+.cover{
+  position:relative;border-radius:var(--r);overflow:hidden;
+  height:76px;display:flex;align-items:center;justify-content:center;
+}
+.cover .letter{font-size:30px;font-weight:700;color:rgba(255,255,255,.22);letter-spacing:-1px;user-select:none}
+.cover .pos-tag{
+  position:absolute;left:10px;bottom:8px;background:rgba(0,0,0,.45);
+  border-radius:999px;padding:3px 10px;font-size:11px;backdrop-filter:blur(4px);
+}
+.cover .dots{
+  position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;
+  background:rgba(0,0,0,.45);border:none;color:#fff;font-size:13px;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+
+/* ================= КАРТКА СЛОВА ================= */
+.wordline{display:flex;align-items:flex-start;gap:12px}
+.wordline h1{font-size:31px;margin:0;font-weight:600;line-height:1.15;flex:1}
+.phon{color:var(--muted);font-size:15px}
+.trans{color:var(--violet-l);font-size:20px;font-weight:600;margin:12px 0 0}
+.defn{color:var(--muted);font-size:15.5px;line-height:1.55;margin:12px 0 0}
+.speaker{background:none;border:none;color:var(--text);font-size:21px;padding:2px 4px}
+.example{
+  background:var(--surf2);border-radius:10px;padding:14px 16px;margin-top:16px;
+  font-style:italic;line-height:1.6;font-size:15px;
+}
+.example b{color:var(--violet-l);font-style:italic;font-weight:600}
+.actions2{display:flex;gap:12px;margin-top:18px}
+.actions2 .btn{flex:1}
+
+.segments{display:flex;gap:3px;margin-top:6px}
+.segments i{width:14px;height:6px;border-radius:2px;background:var(--surf3)}
+.segments i.on{background:var(--cyan)}
+.segments i.max{background:var(--good)}
+
+/* ================= КАРТА ЗНАНЬ ================= */
+.bandgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px}
+.band{
+  position:relative;background:var(--surf);border-radius:9px;overflow:hidden;border:none;
+  color:var(--text);padding:14px 4px;font-size:13.5px;font-weight:600;text-align:center;
+}
+.band .fill{position:absolute;inset:0 auto 0 0;background:var(--cyan);opacity:.85}
+.band span{position:relative;z-index:1;mix-blend-mode:difference}
+.band.cur{outline:2px solid #ff2d6f;outline-offset:-2px}
+
+.tilegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+.tile{
+  background:var(--surf);border:none;border-radius:9px;color:var(--text);
+  padding:16px 8px;font-size:14.5px;font-weight:500;min-height:58px;
+  display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;
+}
+.tile:hover{background:var(--surf3)}
+.tile.known{background:rgba(37,201,222,.16);color:var(--cyan)}
+.tile.learn{background:rgba(192,38,245,.16);color:var(--violet-l)}
+.tile.done{background:rgba(63,191,111,.16);color:var(--good)}
+
+.rangebar{
+  display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surf);
+  border-radius:999px;padding:11px 20px;margin:18px auto 0;width:fit-content;
+  font-weight:600;font-size:14px;border:none;color:var(--text);
+}
+.minimap{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:4px;margin-top:14px}
+.minimap i{aspect-ratio:1;border-radius:2px;background:var(--surf)}
+.minimap i.p{background:var(--cyan);opacity:.35}
+.minimap i.f{background:var(--cyan)}
+.minimap i.cur{outline:1.5px solid #ff2d6f}
+
+/* ================= НАБОРИ ================= */
+.listgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.listrow{
+  display:flex;align-items:center;gap:13px;background:var(--surf);border-radius:11px;
+  padding:11px;border:none;color:var(--text);text-align:left;position:relative;overflow:hidden;width:100%;
+}
+.listrow:hover{background:var(--surf3)}
+.listrow .thumb{
+  width:68px;height:54px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:21px;
+}
+.listrow .meta{flex:1;min-width:0}
+.listrow .nm{font-size:15px;font-weight:600;margin-bottom:7px}
+.listrow .bar{height:4px;background:var(--surf3);border-radius:99px;overflow:hidden}
+.listrow .bar>div{height:100%;background:var(--cyan)}
+.listrow .pc{font-size:12.5px;color:var(--muted);margin-top:5px}
+.listrow .chev{color:var(--dim);font-size:20px}
+
+/* ================= ЧИТАННЯ ================= */
+.textitem{
+  display:block;width:100%;text-align:left;padding:13px 15px;background:var(--surf2);
+  border:none;border-radius:10px;margin-bottom:9px;color:var(--text);
+}
+.textitem:hover{background:var(--surf3)}
+.reading-body{line-height:2;font-size:16.5px}
+.reading-body .tok{cursor:pointer;border-radius:3px;padding:1px 2px}
+.reading-body .tok:hover{background:var(--surf3)}
+.reading-body .tok.known{background:rgba(37,201,222,.2);box-shadow:inset 0 -2px 0 rgba(37,201,222,.6)}
+.reading-body .tok.mastered{background:rgba(63,191,111,.18);box-shadow:inset 0 -2px 0 rgba(63,191,111,.55)}
+.panel-mini{background:var(--surf2);border-radius:9px;padding:11px 13px;margin-top:9px}
+.panel-mini .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:5px}
+
+/* ================= COMPARE ================= */
+.cmp-title{text-align:center;font-size:21px;font-weight:600;color:var(--violet-l);margin:4px 0 16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips.mid{justify-content:center}
+.chip{background:var(--surf);border:none;border-radius:9px;color:var(--text);padding:10px 16px;font-size:14px;font-weight:500}
+.chip:hover{background:var(--surf3)}
+.chip.on{background:var(--cyan);color:#04282d;font-weight:600}
+.cmp-text{line-height:1.65;font-size:15.5px;max-width:760px;margin:0 auto}
+.cmp-text p{margin:0 0 15px}
+.cmp-text .a{color:var(--cyan)}
+.cmp-text .b{color:var(--violet-l)}
+
+/* ================= ТЕСТИ ================= */
+.optbtn{
+  display:block;width:100%;text-align:left;background:var(--surf2);border:1.5px solid var(--line);
+  color:var(--text);padding:15px 18px;border-radius:11px;margin-bottom:10px;font-size:15.5px;transition:.12s;
+}
+.optbtn:hover:not(:disabled){border-color:var(--cyan);background:var(--surf3)}
+.optbtn:disabled{cursor:default}
+.optbtn.correct{background:rgba(63,191,111,.18);border-color:var(--good)}
+.optbtn.wrong{background:rgba(224,85,90,.18);border-color:var(--bad)}
+.qkind{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--cyan);margin-bottom:10px;font-weight:600}
+.qtitle{font-size:19px;margin-bottom:20px;line-height:1.55;font-weight:500}
+.qtitle b{color:var(--violet-l)}
+.gap{display:inline-block;min-width:100px;border-bottom:2px dashed var(--cyan);margin:0 4px}
+.tresult{margin-top:14px;font-size:15px;line-height:1.55}
+.tresult.ok{color:var(--good)}
+.tresult.no{color:var(--bad)}
+.tresult .right{color:var(--good);font-weight:600}
+.progressbar{height:6px;background:var(--surf);border-radius:99px;overflow:hidden;margin-bottom:20px}
+.progressbar>div{height:100%;background:var(--cyan);transition:width .3s}
+.mistakes{display:flex;flex-direction:column;gap:8px}
+.mistake{
+  display:flex;justify-content:space-between;gap:12px;background:var(--surf2);
+  border-radius:9px;padding:11px 14px;font-size:14px;
+}
+
+/* картка вибору визначення (слово → визначення) */
+.defcard{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  background:var(--surf2);border:1.5px solid var(--line);border-radius:11px;
+  padding:12px;margin-bottom:10px;color:var(--text);transition:.12s;
+}
+.defcard:hover:not(:disabled){border-color:var(--cyan);background:var(--surf3)}
+.defcard:disabled{cursor:default}
+.defcard.correct{background:rgba(63,191,111,.18);border-color:var(--good)}
+.defcard.wrong{background:rgba(224,85,90,.18);border-color:var(--bad)}
+.dc-thumb{width:52px;height:42px;border-radius:8px;flex-shrink:0}
+.dc-text{font-size:14.5px;line-height:1.45}
+
+/* кнопка відтворення для тестів на слух */
+.playbtn{
+  width:78px;height:78px;border-radius:50%;border:none;background:var(--cyan);
+  color:#04282d;font-size:26px;display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 8px rgba(37,201,222,.12);
+}
+.playbtn:hover{filter:brightness(1.1)}
+
+/* плавна поява картки запитання при переході між тестами */
+.qcard{animation:qcardIn .22s ease}
+@keyframes qcardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ================= ПОВТОРЕННЯ / ТРЕКІНГ ================= */
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.stat{background:var(--surf);border-radius:10px;padding:11px;text-align:center}
+.stat b{display:block;font-size:21px;line-height:1.2}
+.stat span{font-size:11px;color:var(--muted)}
+
+.forecast{display:flex;align-items:flex-end;gap:5px;height:130px;margin-top:6px}
+.forecast .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.forecast .bar{
+  width:100%;background:var(--cyan);border-radius:4px 4px 0 0;min-height:3px;transition:.2s;
+}
+.forecast .col.today .bar{background:var(--violet)}
+.forecast .col.over .bar{background:var(--bad)}
+.forecast .lb{font-size:10px;color:var(--dim);white-space:nowrap}
+.forecast .vl{font-size:11px;color:var(--muted);font-weight:600}
+
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;margin-top:8px}
+.heat i{width:100%;aspect-ratio:1;border-radius:2.5px;background:var(--surf);min-width:9px}
+.heat i.l1{background:rgba(37,201,222,.3)}
+.heat i.l2{background:rgba(37,201,222,.55)}
+.heat i.l3{background:rgba(37,201,222,.78)}
+.heat i.l4{background:var(--cyan)}
+.heat-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--dim)}
+.heat-legend i{width:11px;height:11px;border-radius:2.5px;display:inline-block;background:var(--surf)}
+
+.duelist{display:flex;flex-wrap:wrap;gap:8px}
+.duechip{
+  background:var(--surf2);border:1px solid var(--line);border-radius:8px;
+  padding:8px 12px;font-size:13.5px;color:var(--text);
+}
+.duechip.over{border-color:var(--bad);color:#ffb4b6}
+.duechip small{color:var(--dim);margin-left:6px}
+
+/* ================= ЛИСТ / ТОСТ ================= */
+.sheetwrap{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.68);padding:20px}
+.sheet{
+  background:var(--surf);width:100%;max-width:440px;border-radius:16px;padding:26px 24px;
+  max-height:88vh;overflow:auto;animation:pop .18s ease;
+}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.sheet h2{text-align:center;color:var(--cyan);font-size:23px;margin-bottom:4px}
+.sheet .sub{text-align:center;color:var(--muted);margin-bottom:20px;font-size:14px}
+.radio{display:flex;align-items:center;gap:12px;padding:11px 4px;font-size:15.5px;cursor:pointer}
+.radio input{width:auto;accent-color:var(--cyan);transform:scale(1.25)}
+.radio .rec{color:var(--muted);font-size:13px}
+
+.actionbar{
+  display:flex;align-items:center;gap:14px;background:var(--surf2);
+  border:1px solid var(--line);border-radius:12px;padding:13px 16px;
+}
+.actionbar .left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.actionbar .tick{
+  width:32px;height:32px;border-radius:50%;background:var(--cyan);color:#04282d;
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+}
+.actionbar .lbl{font-size:13px;color:var(--muted)}
+
+.empty{text-align:center;color:var(--muted);padding:60px 20px;line-height:1.7}
+.empty .big{font-size:52px;margin-bottom:14px}
+
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--surf3);color:#fff;padding:13px 22px;border-radius:999px;
+  font-size:14.5px;z-index:200;opacity:0;transition:.25s;pointer-events:none;max-width:90%;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--bad)}
+.toast.ok{background:var(--good);color:#04250f}
+
+.spinner{
+  display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+.note-input{background:none;border:none;color:var(--muted);padding:12px 0;font-size:14px}
+.note-input:focus{color:var(--text)}
+
+/* ================= ТАКТИЛЬНИЙ ВІДГУК ================= */
+/* миттєва реакція на дотик/клік — усе, по чому тапають, трохи «просідає» */
+.btn,.optbtn,.defcard,.tile,.band,.chip,.listrow,.duechip,.navcard,
+.tb-btn,.speaker,.playbtn,.sidenav button,.tabbar button,.radio{
+  transition:transform .08s ease, filter .08s ease, background .12s ease, border-color .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active:not(:disabled),.optbtn:active:not(:disabled),.defcard:active:not(:disabled),
+.tile:active,.band:active,.chip:active,.listrow:active,.duechip:active,.navcard:active,
+.tb-btn:active,.speaker:active,.playbtn:active,.sidenav button:active,.tabbar button:active{
+  transform:scale(.96);
+}
+
+/* ================= АДАПТИВ ================= */
+@media(max-width:1000px){
+  .split{grid-template-columns:1fr;gap:16px}
+  .cols.c3{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  main{
+    padding:16px 14px 40px;
+    padding-left:calc(14px + env(safe-area-inset-left));
+    padding-right:calc(14px + env(safe-area-inset-right));
+    padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  .topbar{
+    padding:12px 14px;
+    padding-top:calc(12px + env(safe-area-inset-top));
+    padding-left:calc(14px + env(safe-area-inset-left));
+    padding-right:calc(14px + env(safe-area-inset-right));
+  }
+  .topbar .tb-btn.ghost{display:flex;visibility:hidden}
+  .topbar .tb-title{font-size:17px;text-align:center}
+  .cols.c2,.cols.c3{grid-template-columns:1fr}
+  .wordline h1{font-size:26px}
+  .sheetwrap{align-items:flex-end;padding:0}
+  .sheet{
+    max-width:none;border-radius:18px 18px 0 0;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+
+  /* трохи просторіші зони дотику — на телефоні легше влучити пальцем */
+  .btn{padding:13px 18px}
+  .btn.sm{padding:11px 15px}
+  .tb-btn{width:40px;height:40px}
+  .navcard{padding:14px}
+  .chip button{padding:6px 4px !important;margin-left:2px !important}
+  input,textarea,select{padding:11px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span class="mark">◆</span> WordMap</div>
+    <nav class="sidenav" id="sidenav"></nav>
+    <div class="side-foot" id="sidefoot"></div>
+  </aside>
+  <div class="content">
+    <header class="topbar" id="topbar"></header>
+    <main><div class="wrap" id="main"></div></main>
+  </div>
+</div>
+
+<nav class="tabbar" id="tabbar"></nav>
+<div id="sheet" class="sheetwrap hidden"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* cloud.js — синхронізація через Firebase Firestore БЕЗ входу в акаунт.
+   Один спільний документ на весь сайт: усі, хто відкриє сторінку з тим самим
+   конфігом проєкту, бачать ті самі дані та отримують зміни одне одного
+   в реальному часі (onSnapshot). Немає користувачів, немає приватності —
+   це навмисно публічна спільна дошка, а не персональний акаунт. */
+
+/* Вбудований конфіг проєкту — сайт підключається до спільного сховища сам,
+   без ручного вставляння конфігурації. Це не секрет: ключ Firebase для
+   веброзробки призначений бути публічним, захист лежить на правилах
+   Firestore (Rules), а не на приховуванні цього об'єкта. */
+const DEFAULT_FIREBASE_CONFIG = JSON.stringify({
+  apiKey: "AIzaSyB-j0NTweiy0q2KCUKVTFF106OlAO9napQ",
+  authDomain: "english-ba621.firebaseapp.com",
+  databaseURL: "https://english-ba621-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "english-ba621",
+  storageBucket: "english-ba621.firebasestorage.app",
+  messagingSenderId: "1055258408142",
+  appId: "1:1055258408142:web:02e851b942533e08090c9f"
+});
+
+const Cloud = (function(){
+  const SDK = 'https://www.gstatic.com/firebasejs/10.13.0/';
+  const DOC_PATH = ['shared', 'wordmap'];   // єдиний документ для всього сайту
+
+  let appMod = null, fsMod = null;
+  let app = null, db = null;
+  let ready = false;
+  let unsub = null;
+  let lastSeenJson = null;   // щоб не зациклюватись на власних змінах, що повернулись
+  let saveTimer = null;
+  /* поки не прийшов перший знімок документа (або підписка не впала з
+     помилкою), push() мовчки нічого не робить. Без цього щойно відкрита
+     вкладка встигає одразу «зберегти» свій ще порожній/старий локальний
+     стан у хмару швидше, ніж туди долетять реальні дані з сервера — і
+     тим самим затирає спільний прогрес і ключ API в усіх, хто підключений
+     до того самого документа. */
+  let synced = false;
+
+  async function ensureSdk(){
+    if(appMod) return;
+    [appMod, fsMod] = await Promise.all([
+      import(SDK + 'firebase-app.js'),
+      import(SDK + 'firebase-firestore.js')
+    ]);
+  }
+
+  /* Приймає або готовий об'єкт, або текст, скопійований прямо з консолі
+     Firebase (з неекранованими ключами, можливо разом з "const ... = ") */
+  function parseConfig(raw){
+    if(typeof raw === 'object' && raw) return raw;
+    const text = String(raw).trim();
+    try{ return JSON.parse(text); }catch(e){}
+    const match = text.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('Не вдалося розпізнати конфігурацію');
+    /* eslint-disable no-new-func */
+    return new Function('return (' + match[0] + ')')();
+  }
+
+  async function configure(rawConfig){
+    await ensureSdk();
+    const cfg = parseConfig(rawConfig);
+    app = appMod.initializeApp(cfg);
+    db = fsMod.getFirestore(app);
+    ready = true;
+    synced = false;
+    return cfg;
+  }
+
+  function isConfigured(){ return ready; }
+
+  /* Підписка на живі зміни спільного документа. cb(data) викликається щоразу,
+     коли хтось (включно з нами самими) оновлює документ — крім випадку,
+     коли це відлуння нашого ж щойного push(). */
+  function watch(cb){
+    if(unsub){ unsub(); unsub = null; }
+    const ref = fsMod.doc(db, ...DOC_PATH);
+    unsub = fsMod.onSnapshot(ref, snap => {
+      synced = true;
+      if(!snap.exists()) return;
+      const v = snap.data();
+      if(!v || !v.data || v.data === lastSeenJson) return;
+      lastSeenJson = v.data;
+      try{ cb(JSON.parse(v.data)); }catch(e){}
+    }, err => { synced = true; console.warn('Firestore: помилка підписки', err); });
+  }
+
+  async function push(data){
+    if(!synced) return;   // ще не бачили серверну версію — рано перезаписувати її своєю
+    const json = JSON.stringify(data);
+    if(json === lastSeenJson) return;   // ідентично тому, що вже на сервері
+    lastSeenJson = json;
+    await fsMod.setDoc(fsMod.doc(db, ...DOC_PATH), {data: json, updatedAt: Date.now()});
+  }
+
+  /* Фонове збереження з невеликою затримкою — щоб не бити в мережу на
+     кожну дрібну зміну (наприклад, кожне слово в тріажі) */
+  function autosave(data){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { push(data).catch(() => {}); }, 1200);
+  }
+
+  return { configure, isConfigured, watch, push, autosave };
+})();
+
+/* data.js — стартовий банк слів, відсортований за частотністю вживання.
+   Формат рядка: слово|переклад|частина мови
+   Визначення, приклади та синоніми підтягуються з відкритих словників на вимогу. */
+
+const STARTER_BANK = `
+time|час|n
+year|рік|n
+people|люди|n
+way|спосіб, шлях|n
+day|день|n
+man|чоловік|n
+thing|річ|n
+woman|жінка|n
+life|життя|n
+child|дитина|n
+world|світ|n
+school|школа|n
+family|сім'я|n
+student|студент|n
+group|група|n
+country|країна|n
+problem|проблема|n
+hand|рука|n
+part|частина|n
+place|місце|n
+case|випадок|n
+week|тиждень|n
+company|компанія|n
+system|система|n
+question|питання|n
+work|робота|n
+government|уряд|n
+number|число|n
+night|ніч|n
+point|суть, точка|n
+home|дім|n
+water|вода|n
+room|кімната|n
+mother|мати|n
+money|гроші|n
+story|історія|n
+fact|факт|n
+month|місяць|n
+right|право|n
+book|книга|n
+eye|око|n
+job|робота|n
+word|слово|n
+business|бізнес|n
+issue|питання, проблема|n
+side|сторона|n
+head|голова|n
+house|будинок|n
+service|послуга|n
+friend|друг|n
+father|батько|n
+power|сила, влада|n
+hour|година|n
+game|гра|n
+line|лінія|n
+end|кінець|n
+member|учасник|n
+law|закон|n
+car|автомобіль|n
+city|місто|n
+name|ім'я|n
+team|команда|n
+minute|хвилина|n
+idea|ідея|n
+body|тіло|n
+information|інформація|n
+face|обличчя|n
+level|рівень|n
+office|офіс|n
+door|двері|n
+health|здоров'я|n
+person|особа|n
+art|мистецтво|n
+war|війна|n
+history|історія|n
+result|результат|n
+change|зміна|n
+morning|ранок|n
+reason|причина|n
+research|дослідження|n
+girl|дівчина|n
+food|їжа|n
+moment|мить|n
+air|повітря|n
+teacher|вчитель|n
+force|сила|n
+education|освіта|n
+foot|нога, стопа|n
+boy|хлопчик|n
+age|вік|n
+process|процес|n
+music|музика|n
+market|ринок|n
+sense|відчуття, сенс|n
+plan|план|n
+interest|інтерес|n
+death|смерть|n
+experience|досвід|n
+effect|ефект|n
+class|клас|n
+control|контроль|n
+care|турбота|n
+field|поле|n
+development|розвиток|n
+role|роль|n
+effort|зусилля|n
+heart|серце|n
+show|шоу|n
+leader|лідер|n
+light|світло|n
+voice|голос|n
+wife|дружина|n
+police|поліція|n
+mind|розум|n
+price|ціна|n
+report|звіт|n
+decision|рішення|n
+son|син|n
+view|погляд, вигляд|n
+relationship|стосунки|n
+town|містечко|n
+road|дорога|n
+arm|рука|n
+difference|різниця|n
+value|цінність|n
+building|будівля|n
+action|дія|n
+season|сезон|n
+society|суспільство|n
+tax|податок|n
+position|позиція|n
+player|гравець|n
+record|запис|n
+paper|папір|n
+space|простір|n
+ground|земля|n
+form|форма|n
+event|подія|n
+matter|справа|n
+center|центр|n
+couple|пара|n
+project|проєкт|n
+star|зірка|n
+table|стіл|n
+need|потреба|n
+court|суд|n
+sky|небо|n
+tree|дерево|n
+street|вулиця|n
+window|вікно|n
+picture|картина|n
+letter|лист, літера|n
+answer|відповідь|n
+holiday|свято, відпустка|n
+weather|погода|n
+language|мова|n
+travel|подорож|n
+kitchen|кухня|n
+garden|сад|n
+animal|тварина|n
+doctor|лікар|n
+hospital|лікарня|n
+shop|магазин|n
+be|бути|v
+have|мати|v
+do|робити|v
+say|казати|v
+get|отримувати|v
+make|робити, створювати|v
+go|йти|v
+know|знати|v
+take|брати|v
+see|бачити|v
+come|приходити|v
+think|думати|v
+look|дивитися|v
+want|хотіти|v
+give|давати|v
+use|використовувати|v
+find|знаходити|v
+tell|розповідати|v
+ask|питати|v
+seem|здаватися|v
+feel|відчувати|v
+try|намагатися|v
+leave|залишати|v
+call|дзвонити, називати|v
+keep|тримати|v
+let|дозволяти|v
+begin|починати|v
+help|допомагати|v
+talk|говорити|v
+turn|повертати|v
+start|починати|v
+move|рухати|v
+live|жити|v
+believe|вірити|v
+hold|тримати|v
+bring|приносити|v
+happen|ставатися|v
+write|писати|v
+provide|надавати|v
+sit|сидіти|v
+stand|стояти|v
+lose|втрачати|v
+pay|платити|v
+meet|зустрічати|v
+include|включати|v
+continue|продовжувати|v
+learn|вчити|v
+lead|вести|v
+understand|розуміти|v
+watch|дивитися|v
+follow|слідувати|v
+stop|зупиняти|v
+create|створювати|v
+speak|говорити|v
+read|читати|v
+spend|витрачати|v
+grow|рости|v
+open|відкривати|v
+walk|йти пішки|v
+win|перемагати|v
+teach|навчати|v
+offer|пропонувати|v
+remember|пам'ятати|v
+consider|розглядати|v
+appear|з'являтися|v
+buy|купувати|v
+serve|обслуговувати|v
+die|помирати|v
+send|надсилати|v
+build|будувати|v
+stay|залишатися|v
+fall|падати|v
+cut|різати|v
+reach|досягати|v
+raise|піднімати|v
+listen|слухати|v
+sleep|спати|v
+drink|пити|v
+eat|їсти|v
+drive|керувати авто|v
+run|бігти|v
+play|грати|v
+sing|співати|v
+dance|танцювати|v
+cook|готувати|v
+clean|прибирати|v
+wash|мити|v
+wear|носити одяг|v
+carry|нести|v
+catch|ловити|v
+throw|кидати|v
+push|штовхати|v
+pull|тягнути|v
+break|ламати|v
+fix|лагодити|v
+choose|обирати|v
+decide|вирішувати|v
+explain|пояснювати|v
+describe|описувати|v
+compare|порівнювати|v
+improve|покращувати|v
+manage|керувати|v
+accept|приймати|v
+refuse|відмовляти|v
+promise|обіцяти|v
+suggest|пропонувати|v
+prefer|надавати перевагу|v
+enjoy|насолоджуватися|v
+worry|хвилюватися|v
+hope|сподіватися|v
+imagine|уявляти|v
+realize|усвідомлювати|v
+notice|помічати|v
+avoid|уникати|v
+achieve|досягати|v
+support|підтримувати|v
+protect|захищати|v
+prepare|готувати|v
+arrive|прибувати|v
+return|повертатися|v
+travel|подорожувати|v
+visit|відвідувати|v
+good|хороший|adj
+new|новий|adj
+first|перший|adj
+last|останній|adj
+long|довгий|adj
+great|чудовий|adj
+little|маленький|adj
+own|власний|adj
+other|інший|adj
+old|старий|adj
+big|великий|adj
+high|високий|adj
+different|різний|adj
+small|малий|adj
+large|великий|adj
+next|наступний|adj
+early|ранній|adj
+young|молодий|adj
+important|важливий|adj
+public|публічний|adj
+bad|поганий|adj
+same|той самий|adj
+able|здатний|adj
+strong|сильний|adj
+free|вільний|adj
+true|правдивий|adj
+easy|легкий|adj
+hard|важкий, твердий|adj
+happy|щасливий|adj
+sure|впевнений|adj
+clear|ясний|adj
+ready|готовий|adj
+simple|простий|adj
+close|близький|adj
+real|справжній|adj
+full|повний|adj
+special|особливий|adj
+serious|серйозний|adj
+quick|швидкий|adj
+safe|безпечний|adj
+beautiful|красивий|adj
+poor|бідний|adj
+rich|багатий|adj
+deep|глибокий|adj
+warm|теплий|adj
+cold|холодний|adj
+quiet|тихий|adj
+busy|зайнятий|adj
+angry|сердитий|adj
+tired|втомлений|adj
+afraid|наляканий|adj
+famous|відомий|adj
+modern|сучасний|adj
+ancient|давній|adj
+common|поширений|adj
+rare|рідкісний|adj
+useful|корисний|adj
+dangerous|небезпечний|adj
+polite|ввічливий|adj
+honest|чесний|adj
+brave|хоробрий|adj
+proud|гордий|adj
+lonely|самотній|adj
+curious|допитливий|adj
+reluctant|неохочий|adj
+thorough|ретельний|adj
+vivid|яскравий|adj
+scarce|дефіцитний|adj
+deliberate|навмисний|adj
+fragile|крихкий|adj
+stubborn|впертий|adj
+generous|щедрий|adj
+gentle|лагідний|adj
+awkward|незручний|adj
+gorgeous|розкішний|adj
+tremendous|величезний|adj
+subtle|тонкий, ледь помітний|adj
+genuine|справжній|adj
+severe|суворий|adj
+gradual|поступовий|adj
+`.trim();
+
+/* Перетворює текстовий банк на масив об'єктів із рангами за частотністю */
+function parseStarterBank(){
+  return STARTER_BANK.split('\n').map((line, i) => {
+    const [word, translation, pos] = line.split('|');
+    return { rank: i + 1, word: word.trim(), translation: translation.trim(), pos: (pos || '').trim() };
+  });
+}
+
+/* core.js — утиліти, сховище та логіка повторень у стилі WordUp */
+
+/* =========================================================
+   Utils
+   ========================================================= */
+const Utils = {
+  uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); },
+
+  esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  },
+
+  /* Дати — локальні, без переходу в UTC (інакше пояс зсуває день) */
+  fmtLocal(d){
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  },
+  today(){ return Utils.fmtLocal(new Date()); },
+  addDays(iso, n){
+    const [y,m,d] = iso.split('-').map(Number);
+    return Utils.fmtLocal(new Date(y, m-1, d+n));
+  },
+  daysBetween(a, b){
+    return Math.round((Date.parse(b+'T00:00:00Z') - Date.parse(a+'T00:00:00Z')) / 86400000);
+  },
+  fmtWhen(iso){
+    if(!iso) return 'ніколи';
+    const d = Utils.daysBetween(Utils.today(), iso);
+    if(d < 0)  return `прострочено ${-d} дн.`;
+    if(d === 0) return 'сьогодні';
+    if(d === 1) return 'завтра';
+    if(d < 7)  return `через ${d} дн.`;
+    if(d < 31) return `через ${Math.round(d/7)} тиж.`;
+    if(d < 365) return `через ${Math.round(d/30)} міс.`;
+    return `через ${Math.round(d/365)} р.`;
+  },
+
+  shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  },
+  pick(arr, n){ return Utils.shuffle(arr).slice(0, n); },
+  norm(s){ return String(s||'').trim().toLowerCase(); },
+
+  /* Детермінований градієнт-обкладинка для слова (замість фото) */
+  hue(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) % 360;
+    return h;
+  },
+  cover(word){
+    const h1 = Utils.hue(word);
+    const h2 = (h1 + 55) % 360;
+    return `linear-gradient(135deg, hsl(${h1} 62% 34%), hsl(${h2} 58% 20%))`;
+  },
+
+  speak(text, lang='en-US'){
+    if(!Store.db.settings.tts) return;
+    Utils.speakForce(text, lang);
+  },
+
+  /* Озвучення, що ігнорує тумблер «Озвучувати слова» — для тестів на слух,
+     де звук є самою суттю запитання, а не додатковою зручністю. */
+  speakForce(text, lang='en-US'){
+    if(!window.speechSynthesis) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang; u.rate = .9;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  },
+
+  toast(msg, kind=''){
+    const el = document.getElementById('toast');
+    if(!el) return;
+    el.textContent = msg;
+    el.className = 'toast show ' + kind;
+    clearTimeout(Utils._t);
+    Utils._t = setTimeout(() => { el.className = 'toast ' + kind; }, 2400);
+  }
+};
+
+/* =========================================================
+   SRS — WordUp-подібна логіка.
+   Інтервал користувач обирає вручну, застосунок лише радить
+   наступний крок за кількістю успішних згадувань.
+   ========================================================= */
+const SRS = {
+  LADDER: [1, 2, 4, 7, 14, 30, 60, 120, 240, 365],
+  SEGMENTS: 10,
+
+  OPTIONS: [
+    {id:'d1',    label:'Завтра',                  days:1},
+    {id:'d2',    label:'Через 2 дні',             days:2},
+    {id:'w1',    label:'Через тиждень',           days:7},
+    {id:'m1',    label:'Через місяць',            days:30},
+    {id:'never', label:'Ніколи, я це не забуду',  days:null}
+  ],
+
+  /* Рекомендований інтервал = наступна сходинка драбини.
+     Бонус за «чистий» день: якщо на цьому слові сьогодні ще не було
+     помилки, стрибаємо на сходинку далі вперед (напр. не +1 день, а +2). */
+  recommendedDays(w){
+    const stage = Math.min(w.timesRemembered || 0, SRS.LADDER.length - 1);
+    const perfectToday = w.lastMistakeDate !== Utils.today();
+    const bonusStage = perfectToday ? Math.min(stage + 1, SRS.LADDER.length - 1) : stage;
+    return SRS.LADDER[bonusStage];
+  },
+
+  /* Який із варіантів підсвітити як «рекомендовано» */
+  recommendedOption(w){
+    const days = SRS.recommendedDays(w);
+    let best = SRS.OPTIONS[0];
+    for(const o of SRS.OPTIONS){
+      if(o.days !== null && o.days <= days) best = o;
+    }
+    return best.id;
+  },
+
+  isDue(w){
+    return (w.status === 'learning') && !!w.nextReview && w.nextReview <= Utils.today();
+  },
+
+  /* Слово згадали — планування наступного показу */
+  remember(w, days){
+    w.timesRemembered = (w.timesRemembered || 0) + 1;
+    w.lastReview = Utils.today();
+    if(days === null){
+      w.status = 'mastered';
+      w.nextReview = null;
+    } else {
+      w.status = 'learning';
+      w.nextReview = Utils.addDays(Utils.today(), days);
+    }
+  },
+
+  /* Слово забули — назад на завтра, лічильник згадувань скидається.
+     Позначаємо день помилки, щоб сьогодні вже не діяв бонус за «чистий» день. */
+  forget(w){
+    w.timesRemembered = 0;
+    w.lastReview = Utils.today();
+    w.lastMistakeDate = Utils.today();
+    w.status = 'learning';
+    w.nextReview = Utils.addDays(Utils.today(), 1);
+  }
+};
+
+/* =========================================================
+   Store
+   ========================================================= */
+const Store = (function(){
+  const KEY = 'wordmap_v1';
+
+  function defaults(){
+    return {
+      version: 1,
+      words: [],
+      lists: [],                 // {id, name, wordIds[], createdAt}
+      texts: [],                 // {id, title, body, source, createdAt}
+      gems: 0,
+      history: {},               // 'YYYY-MM-DD' -> {triaged, learned, reviewed}
+      settings: {
+        tts:true, apiKey:'', model:'claude-opus-5',
+        autoEnrich:true, bandSize:100,
+        testsAffectSrs:true,         // чи просувають тести розклад повторень
+        firebaseConfig:'',           // JSON-конфіг проєкту Firebase (порожньо = вбудований за замовчуванням)
+        cloudDisabled:false          // true — користувач сам натиснув «Відключити»
+      }
+    };
+  }
+
+  let db = defaults();
+
+  function makeWord(o){
+    return {
+      id: Utils.uid(),
+      rank: o.rank || 999999,
+      word: o.word,
+      translation: o.translation || '',
+      pos: o.pos || '',
+      phonetic: o.phonetic || '',
+      definition: o.definition || '',
+      example: o.example || '',
+      synonyms: o.synonyms || [],
+      antonyms: o.antonyms || [],
+      note: '',
+      favorite: false,
+      lists: o.lists || [],
+      /* прогрес */
+      status: 'new',              // new | learning | mastered
+      timesRemembered: 0,
+      nextReview: null,
+      lastReview: null,
+      lastMistakeDate: null,      // для бонусу за день без жодної помилки
+      enriched: false,
+      custom: !!o.custom,
+      createdAt: Date.now()
+    };
+  }
+
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+    /* якщо підключено спільний сервер — тихо синхронізуємо у фоні */
+    if(typeof Cloud !== 'undefined' && Cloud.isConfigured()) Cloud.autosave(db);
+  }
+
+  function normalize(w){
+    const base = makeWord({word:w.word});
+    for(const k in base) if(w[k] === undefined) w[k] = base[k];
+    return w;
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(raw){
+        const p = JSON.parse(raw);
+        db = Object.assign(defaults(), p);
+        db.settings = Object.assign(defaults().settings, p.settings || {});
+        db.words.forEach(normalize);
+        return;
+      }
+    }catch(e){ db = defaults(); }
+    seed();
+  }
+
+  /* Перший запуск — заливаємо стартовий банк */
+  function seed(){
+    db = defaults();
+    parseStarterBank().forEach(o => db.words.push(makeWord(o)));
+    db.lists.push({
+      id: 'essential',
+      name: 'Базові 300',
+      wordIds: db.words.slice(0, 300).map(w => w.id),
+      createdAt: Date.now(),
+      builtin: true
+    });
+    save();
+  }
+
+  function logDay(field, n = 1){
+    const d = Utils.today();
+    db.history[d] = db.history[d] || {triaged:0, learned:0, reviewed:0};
+    db.history[d][field] = (db.history[d][field] || 0) + n;
+  }
+
+  load();
+
+  const API = {
+    get db(){ return db; },
+    save, logDay, makeWord,
+
+    addGems(n){ db.gems += n; },
+
+    /* ---- слова ---- */
+    get(id){ return db.words.find(w => w.id === id); },
+    byWord(word){ return db.words.find(w => Utils.norm(w.word) === Utils.norm(word)); },
+    has(word){ return !!API.byWord(word); },
+
+    add(o){
+      const w = makeWord({...o, custom: true});
+      /* власні слова стають у кінець карти знань */
+      if(!o.rank) w.rank = Math.max(0, ...db.words.map(x => x.rank)) + 1;
+      db.words.push(w);
+      save();
+      return w;
+    },
+
+    remove(id){
+      db.words = db.words.filter(w => w.id !== id);
+      db.lists.forEach(l => l.wordIds = l.wordIds.filter(x => x !== id));
+      save();
+    },
+
+    /* усі слова, впорядковані за рангом */
+    ranked(){ return [...db.words].sort((a,b) => a.rank - b.rank); },
+
+    /* ---- смуги карти знань ---- */
+    bandSize(){ return db.settings.bandSize || 100; },
+
+    bands(){
+      const size = API.bandSize();
+      const all = API.ranked();
+      const out = [];
+      for(let i = 0; i < all.length; i += size){
+        const chunk = all.slice(i, i + size);
+        const done = chunk.filter(w => w.status !== 'new').length;
+        out.push({
+          index: out.length,
+          from: i + 1,
+          to: i + chunk.length,
+          words: chunk,
+          done,
+          pct: Math.round(done / chunk.length * 100)
+        });
+      }
+      return out;
+    },
+
+    /* перша смуга, де ще лишились неопрацьовані слова */
+    currentBandIndex(){
+      const bands = API.bands();
+      const idx = bands.findIndex(b => b.done < b.words.length);
+      return idx === -1 ? Math.max(0, bands.length - 1) : idx;
+    },
+
+    /* ---- черги ---- */
+    toLearn(){ return db.words.filter(w => w.status === 'learning' && !w.nextReview).sort((a,b) => a.rank - b.rank); },
+    due(){ return db.words.filter(SRS.isDue).sort((a,b) => (a.nextReview||'').localeCompare(b.nextReview||'')); },
+
+    /* ---- списки ---- */
+    listWords(listId){
+      if(listId === 'all') return API.ranked();
+      if(listId === 'favorite') return db.words.filter(w => w.favorite);
+      if(listId === 'custom')  return db.words.filter(w => w.custom);
+      const l = db.lists.find(x => x.id === listId);
+      if(!l) return [];
+      const set = new Set(l.wordIds);
+      return API.ranked().filter(w => set.has(w.id));
+    },
+
+    listProgress(listId){
+      const ws = API.listWords(listId);
+      if(!ws.length) return 0;
+      const done = ws.filter(w => w.status !== 'new').length;
+      return Math.round(done / ws.length * 100);
+    },
+
+    addList(name, wordIds){
+      const l = {id: Utils.uid(), name, wordIds, createdAt: Date.now()};
+      db.lists.push(l); save(); return l;
+    },
+
+    removeList(id){
+      db.lists = db.lists.filter(l => l.id !== id);
+      save();
+    },
+
+    /* ---- тексти для читання ---- */
+    addText(o){
+      const t = {id: Utils.uid(), title: o.title, body: o.body,
+                 source: o.source || 'manual', createdAt: Date.now()};
+      db.texts.push(t); save(); return t;
+    },
+    getText(id){ return db.texts.find(t => t.id === id); },
+    removeText(id){ db.texts = db.texts.filter(t => t.id !== id); save(); },
+
+    /* ---- статистика ---- */
+    stats(){
+      const w = db.words;
+      const by = {new:0, learning:0, mastered:0};
+      w.forEach(x => by[x.status] = (by[x.status]||0) + 1);
+      const covered = w.length - by.new;
+      /* «learning» об'єднує дві фази: у черзі на перше вивчення (ще нема
+         дати) і вже на активному розкладі повторень (дата є) */
+      const toLearn = w.filter(x => x.status === 'learning' && !x.nextReview).length;
+      const studying = w.filter(x => x.status === 'learning' && !!x.nextReview).length;
+      return {
+        total: w.length,
+        ...by,
+        covered,
+        coverage: w.length ? Math.round(covered / w.length * 100) : 0,
+        due: API.due().length,
+        toLearn, studying,
+        gems: db.gems
+      };
+    },
+
+    /* ---- імпорт / експорт ---- */
+    exportJSON(){ return JSON.stringify(db, null, 2); },
+
+    importJSON(raw){ API.importObject(JSON.parse(raw)); },
+
+    /* Те саме, що importJSON, але приймає вже розібраний об'єкт —
+       використовується для відновлення даних із Firestore */
+    importObject(p){
+      if(!p || !Array.isArray(p.words)) throw new Error('Невірний формат даних');
+      db = Object.assign(defaults(), p);
+      db.settings = Object.assign(defaults().settings, p.settings || {});
+      db.words.forEach(normalize);
+      save();
+    },
+
+    /* Таблиця: word,translation,pos,definition,example — з роздільником , ; або таб.
+       Повертає {added, skipped, list} */
+    importTable(raw, listName){
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if(!lines.length) return {added:0, skipped:0, list:null};
+
+      /* якщо перший рядок схожий на заголовок — пропускаємо */
+      const head = Utils.norm(lines[0]);
+      const hasHeader = /(word|слово)/.test(head) && /(translation|переклад|meaning)/.test(head);
+      const rows = hasHeader ? lines.slice(1) : lines;
+
+      const ids = [];
+      let added = 0, skipped = 0;
+      let nextRank = Math.max(0, ...db.words.map(x => x.rank)) + 1;
+
+      rows.forEach(line => {
+        const cells = splitRow(line);
+        const [word, translation, pos, definition, example] = cells;
+        if(!word) return;
+        const existing = API.byWord(word);
+        if(existing){
+          /* не дублюємо, лише додаємо у список і доповнюємо порожні поля */
+          if(translation && !existing.translation) existing.translation = translation;
+          if(definition && !existing.definition) existing.definition = definition;
+          if(example && !existing.example) existing.example = example;
+          ids.push(existing.id);
+          skipped++;
+          return;
+        }
+        const w = makeWord({
+          word, translation: translation || '', pos: pos || '',
+          definition: definition || '', example: example || '',
+          rank: nextRank++, custom: true
+        });
+        db.words.push(w);
+        ids.push(w.id);
+        added++;
+      });
+
+      let list = null;
+      if(listName && ids.length) list = API.addList(listName, ids);
+      save();
+      return {added, skipped, list};
+    },
+
+    reset(){ localStorage.removeItem(KEY); seed(); }
+  };
+
+  /* Розбирає рядок таблиці з урахуванням лапок */
+  function splitRow(line){
+    if(line.includes('\t')) return line.split('\t').map(clean);
+    const out = [];
+    let cur = '', q = false;
+    for(const ch of line){
+      if(ch === '"'){ q = !q; continue; }
+      if((ch === ',' || ch === ';') && !q){ out.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out.map(clean);
+  }
+  function clean(s){ return String(s).trim().replace(/^"|"$/g, ''); }
+
+  return API;
+})();
+
+/* Реєстр екранів */
+const Views = { map:{}, register(id, def){ def.id = id; Views.map[id] = def; } };
+
+/* api.js — зовнішні джерела: відкриті словники (без ключа) + опційно Claude */
+
+const Api = (function(){
+
+  /* fetch без тайм-ауту може зависнути назавжди, якщо зовнішній хост підвисає
+     (dictionaryapi.dev так робить час від часу) — тоді паралельні воркери
+     масового збагачення застрягають без жодного шансу завершитись. */
+  async function fetchTimeout(url, ms = 7000){
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try{ return await fetch(url, {signal: ctrl.signal}); }
+    finally{ clearTimeout(t); }
+  }
+
+  /* ---------- безкоштовні словники ---------- */
+  async function fetchDictionary(word){
+    const res = await fetchTimeout('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word.trim()));
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(!Array.isArray(data) || !data.length) return null;
+
+    const out = {phonetic:'', pos:'', definition:'', example:'', synonyms:[], antonyms:[], examples:[]};
+    for(const entry of data){
+      if(!out.phonetic){
+        out.phonetic = entry.phonetic || (entry.phonetics||[]).map(p=>p.text).find(Boolean) || '';
+      }
+      for(const m of entry.meanings || []){
+        if(!out.pos) out.pos = m.partOfSpeech || '';
+        out.synonyms.push(...(m.synonyms||[]));
+        out.antonyms.push(...(m.antonyms||[]));
+        for(const d of m.definitions || []){
+          if(!out.definition && d.definition) out.definition = d.definition;
+          if(d.example) out.examples.push(d.example);
+          out.synonyms.push(...(d.synonyms||[]));
+          out.antonyms.push(...(d.antonyms||[]));
+        }
+      }
+    }
+    out.example = out.examples[0] || '';
+    return out;
+  }
+
+  async function fetchDatamuse(word, rel){
+    const res = await fetchTimeout(`https://api.datamuse.com/words?rel_${rel}=${encodeURIComponent(word)}&max=9`);
+    if(!res.ok) return [];
+    return (await res.json()).map(d => d.word);
+  }
+
+  function dedupe(list, exclude){
+    const seen = new Set(), ex = Utils.norm(exclude);
+    return list.map(s => String(s).trim()).filter(s => {
+      const n = Utils.norm(s);
+      if(!n || n === ex || seen.has(n)) return false;
+      seen.add(n); return true;
+    }).slice(0, 9);
+  }
+
+  /* Повний перегляд слова у зовнішніх джерелах */
+  async function lookup(word){
+    const r = {phonetic:'', pos:'', definition:'', example:'', synonyms:[], antonyms:[], examples:[]};
+    try{
+      const d = await fetchDictionary(word);
+      if(d) Object.assign(r, d);
+    }catch(e){}
+    try{
+      if(r.synonyms.length < 4) r.synonyms.push(...await fetchDatamuse(word, 'syn'));
+      if(r.antonyms.length < 2) r.antonyms.push(...await fetchDatamuse(word, 'ant'));
+    }catch(e){}
+    r.synonyms = dedupe(r.synonyms, word);
+    r.antonyms = dedupe(r.antonyms, word);
+    r.examples = dedupe(r.examples, '');
+    return (r.definition || r.synonyms.length || r.examples.length) ? r : null;
+  }
+
+  /* Доповнює слово в базі даними зі словника — а якщо слова там немає
+     і підключений ключ Claude, добирає ті самі дані через AI */
+  async function enrich(id){
+    const w = Store.get(id);
+    if(!w) return null;
+    let r = await lookup(w.word);
+    if((!r || (!r.definition && !r.synonyms.length)) && hasAI()){
+      try{
+        const ai = await aiLookup(w.word);
+        if(ai.definition || ai.synonyms.length || ai.translation) r = ai;
+      }catch(e){ /* AI недоступний — лишаємось із тим, що дав словник (або нічим) */ }
+    }
+    if(!r) return null;
+    if(!w.phonetic)    w.phonetic = r.phonetic;
+    if(!w.pos)         w.pos = r.pos;
+    if(!w.definition)  w.definition = r.definition;
+    if(!w.example)     w.example = r.example;
+    if(!w.translation && r.translation) w.translation = r.translation;
+    if(r.synonyms.length) w.synonyms = r.synonyms;
+    if(r.antonyms.length) w.antonyms = r.antonyms;
+    w.enriched = true;
+    Store.save();
+    return w;
+  }
+
+  /* ---------- Claude (опційно) ---------- */
+  function hasAI(){ return !!Store.db.settings.apiKey; }
+
+  async function claude(prompt, maxTokens = 2000){
+    const s = Store.db.settings;
+    if(!s.apiKey) throw new Error('Не вказано ключ Claude API');
+
+    const model = s.model || 'claude-opus-5';
+    /* effort і server-side fallback підтримують не всі моделі —
+       claude-haiku-4-5 повертає помилку на обидва параметри */
+    const supportsExtras = model !== 'claude-haiku-4-5';
+
+    const body = {
+      model,
+      max_tokens: maxTokens,
+      messages:[{role:'user', content: prompt}]
+    };
+    if(supportsExtras){
+      body.output_config = { effort:'low' };
+      body.fallbacks = 'default';
+    }
+
+    const headers = {
+      'content-type':'application/json',
+      'x-api-key': s.apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    };
+    if(supportsExtras) headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    if(!res.ok){
+      const t = await res.text();
+      let msg = `HTTP ${res.status}`;
+      try{ msg = JSON.parse(t).error?.message || msg; }catch(e){}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    if(data.stop_reason === 'refusal') throw new Error('Модель відхилила запит');
+    return (data.content||[]).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+  }
+
+  function parseJSON(text){
+    const c = text.replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+    const s = c.search(/[[{]/);
+    if(s === -1) throw new Error('Відповідь без JSON');
+    const e = Math.max(c.lastIndexOf(']'), c.lastIndexOf('}'));
+    return JSON.parse(c.slice(s, e+1));
+  }
+
+  /* Пояснення різниці між словом і його синонімом — як екран Compare with */
+  async function compare(word, other){
+    const prompt =
+`Explain the difference between the English words "${other}" and "${word}" for a learner.
+Write 3 short paragraphs in English:
+1. What "${other}" means.
+2. Another angle on what "${other}" means or when it is used.
+3. How "${other}" differs from "${word}" in practice.
+
+Return ONLY JSON, no explanations:
+{"paragraphs": ["...", "...", "..."]}`;
+    const obj = parseJSON(await claude(prompt, 1200));
+    if(!Array.isArray(obj.paragraphs)) throw new Error('Неочікувана відповідь');
+    return obj.paragraphs;
+  }
+
+  /* Переклад + приклад для слова без даних */
+  async function describe(word){
+    const prompt =
+`Для англійського слова "${word}" дай:
+- переклад українською (коротко, 1-3 варіанти через кому)
+- просте визначення англійською
+- одне природне речення-приклад англійською з цим словом
+
+Поверни ЛИШЕ JSON без пояснень:
+{"translation":"...","definition":"...","example":"..."}`;
+    return parseJSON(await claude(prompt, 800));
+  }
+
+  /* Повна генерація даних для слова, якого немає у відкритих словниках
+     (сленг, рідкісне слово, неологізм тощо) — переклад, визначення, приклад,
+     синоніми й антоніми одним запитом через Claude. Форма відповіді сумісна
+     з lookup(), плюс поле translation, якого відкриті словники не дають. */
+  async function aiLookup(word){
+    const prompt =
+`Для англійського слова "${word}", якого може не бути у стандартних словниках,
+згенеруй повні дані для картки вивчення мови:
+- переклад українською (коротко, 1-3 варіанти через кому)
+- частина мови скорочено англійською (n, v, adj, adv тощо)
+- просте визначення англійською
+- одне природне речення-приклад англійською з цим словом
+- до 5 синонімів англійською (лише якщо реально існують, інакше порожній масив)
+- до 5 антонімів англійською (лише якщо реально існують, інакше порожній масив)
+
+Поверни ЛИШЕ JSON без пояснень:
+{"translation":"...","pos":"...","definition":"...","example":"...","synonyms":["..."],"antonyms":["..."]}`;
+    const obj = parseJSON(await claude(prompt, 900));
+    return {
+      phonetic: '',
+      pos: obj.pos || '',
+      definition: obj.definition || '',
+      example: obj.example || '',
+      examples: obj.example ? [obj.example] : [],
+      synonyms: Array.isArray(obj.synonyms) ? obj.synonyms.slice(0, 9) : [],
+      antonyms: Array.isArray(obj.antonyms) ? obj.antonyms.slice(0, 9) : [],
+      translation: obj.translation || ''
+    };
+  }
+
+  /* Текст для читання, у який природно вплетені слова, що зараз вивчаються */
+  async function generateText({words, level, topic, length}){
+    const list = words.map(w => w.word).join(', ');
+    const prompt =
+`Напиши текст англійською мовою для того, хто вивчає англійську на рівні ${level}.
+${topic ? `Тема: ${topic}.` : "Тему обери самостійно — цікаву й побутову."}
+Довжина: приблизно ${length} слів.
+
+${list
+  ? `Природно вплети у текст ці слова, якщо вони пасують до теми (не обов'язково всі до одного, головне — щоб текст читався природно): ${list}.\nКожне вжите слово має стояти у звичайному, типовому для нього контексті.`
+  : `Пиши звичайний, природний текст під заданий рівень і тему — без обов'язкового списку слів.`}
+
+Поверни ЛИШЕ JSON без пояснень:
+{"title": "коротка назва англійською", "body": "сам текст"}`;
+
+    const raw = await claude(prompt, 4000);
+    const obj = parseJSON(raw);
+    if(!obj.title || !obj.body) throw new Error('Модель повернула неповний текст');
+    return obj;
+  }
+
+  return { lookup, enrich, hasAI, compare, describe, generateText, aiLookup };
+})();
+
+/* views/map.js — Карта знань: смуги по 100 слів, сітка слів, картка тріажу */
+
+/* ---------- повна карта ---------- */
+Views.register('map', {
+  title: 'Карта знань',
+  tab: 'map',
+
+  render(){
+    const bands = Store.bands();
+    const cur = Store.currentBandIndex();
+    const st = Store.stats();
+
+    if(!bands.length){
+      return `<div class="empty"><div class="big">🗺</div>
+        Словник порожній.<br><span class="dim">Імпортуйте таблицю слів у розділі «Ще».</span></div>`;
+    }
+
+    return `
+    <p class="muted" style="line-height:1.6;margin:4px 0 16px">
+      Це карта вашого знання англійської. Кожна клітинка — ${Store.bandSize()} слів,
+      відсортованих за частотою вживання. Відкривайте їх згори вниз.
+    </p>
+
+    <div class="statgrid" style="margin-bottom:16px">
+      <div class="stat"><b>${st.total}</b><span>усі</span></div>
+      <div class="stat"><b style="color:var(--muted)">${st.new}</b><span>нові</span></div>
+      <div class="stat"><b style="color:var(--violet-l)">${st.learning}</b><span>вивчаю</span></div>
+      <div class="stat"><b style="color:var(--good)">${st.mastered}</b><span>вивчено</span></div>
+    </div>
+
+    <div class="bandgrid">
+      ${bands.map(b => `
+        <button class="band ${b.index === cur ? 'cur' : ''}" data-act="band" data-i="${b.index}">
+          <span class="fill" style="width:${b.pct}%"></span>
+          <span>${b.to}</span>
+        </button>`).join('')}
+    </div>`;
+  },
+
+  actions: {
+    band(el, ds){ App.push('band', {index: +ds.i}); }
+  }
+});
+
+/* ---------- одна смуга: сітка слів ---------- */
+Views.register('band', {
+  title: 'Карта знань',
+  tab: 'map',
+  back: true,
+
+  render(p){
+    const bands = Store.bands();
+    const b = bands[p.index];
+    if(!b) return `<div class="empty">Смугу не знайдено</div>`;
+
+    const cls = w => w.status === 'mastered' ? 'done'
+                 : w.status === 'learning' ? 'learn' : '';
+
+    return `
+    <div class="tilegrid">
+      ${b.words.map(w => `
+        <button class="tile ${cls(w)}" data-act="open" data-id="${w.id}">${Utils.esc(w.word)}</button>
+      `).join('')}
+    </div>
+
+    <button class="rangebar" data-act="ranges">
+      Діапазон ${b.from.toLocaleString('uk')} – ${b.to.toLocaleString('uk')} ▾
+    </button>
+
+    <div class="minimap">
+      ${bands.map(x => `<i class="${x.pct === 100 ? 'f' : x.pct > 0 ? 'p' : ''} ${x.index === p.index ? 'cur' : ''}"></i>`).join('')}
+    </div>`;
+  },
+
+  actions: {
+    open(el, ds){
+      const b = Store.bands()[App.params().index];
+      const queue = b.words.map(w => w.id);
+      App.push('triage', {queue, at: queue.indexOf(ds.id)});
+    },
+
+    ranges(){
+      const bands = Store.bands();
+      App.sheet(`
+        <h2 style="color:var(--text);font-size:19px">Оберіть діапазон</h2>
+        <div class="bandgrid" style="margin-top:14px">
+          ${bands.map(b => `
+            <button class="band" data-act="pickRange" data-i="${b.index}">
+              <span class="fill" style="width:${b.pct}%"></span>
+              <span>${b.to}</span>
+            </button>`).join('')}
+        </div>`);
+    },
+
+    pickRange(el, ds){
+      App.closeSheet();
+      App.replace('band', {index: +ds.i});
+    }
+  }
+});
+
+/* ---------- картка тріажу: Should Learn / Already Knew ---------- */
+Views.register('triage', {
+  title: 'Карта знань',
+  tab: 'map',
+  back: true,
+
+  render(p){
+    const w = Store.get(p.queue[p.at]);
+    if(!w) return `<div class="empty"><div class="big">✅</div>Усі слова цієї смуги опрацьовано.</div>`;
+
+    return `
+    <div class="triage">
+      <div class="cover" style="background:${Utils.cover(w.word)}">
+        <span class="letter">${Utils.esc(w.word[0].toUpperCase())}</span>
+        ${w.pos ? `<span class="pos-tag">${Utils.esc(w.pos)}</span>` : ''}
+        <button class="dots" data-act="detail">⋯</button>
+      </div>
+
+      <div class="body">
+        <div class="wordline">
+          <div style="flex:1;min-width:0">
+            <h1>${Utils.esc(w.word)}</h1>
+            ${w.phonetic ? `<div class="phon">${Utils.esc(w.phonetic)}</div>` : ''}
+          </div>
+          <button class="speaker" data-act="say">🔊</button>
+        </div>
+
+        <div class="trans">${Utils.esc(w.translation || '—')}</div>
+        ${w.definition ? `<div class="defn">${Utils.esc(w.definition)}</div>` : ''}
+        ${!w.enriched ? `<button class="btn ghost sm" data-act="enrich" style="margin-top:14px">
+            🔍 Підтягнути визначення й синоніми</button>` : ''}
+      </div>
+
+      <div class="actions2">
+        <button class="btn violet" data-act="learn">Треба вчити</button>
+        <button class="btn cyan" data-act="knew">Вже знаю</button>
+      </div>
+    </div>
+
+    <div class="center dim">${p.at + 1} з ${p.queue.length}</div>`;
+  },
+
+  mount(p){
+    const w = Store.get(p.queue[p.at]);
+    /* автоматично добираємо визначення, якщо його ще немає */
+    if(w && !w.enriched && Store.db.settings.autoEnrich){
+      Api.enrich(w.id).then(r => { if(r && App.top().view === 'triage') App.render(); }).catch(()=>{});
+    }
+  },
+
+  actions: {
+    say(){ const p = App.params(); const w = Store.get(p.queue[p.at]); if(w) Utils.speak(w.word); },
+
+    async enrich(el){
+      const p = App.params(), w = Store.get(p.queue[p.at]);
+      el.disabled = true; el.innerHTML = '<span class="spinner"></span> Шукаю…';
+      const r = await Api.enrich(w.id);
+      if(!r) Utils.toast('Нічого не знайдено', 'err');
+      App.render();
+    },
+
+    detail(){ const p = App.params(); App.push('word', {id: p.queue[p.at]}); },
+
+    knew(){ triageStep('mastered'); },
+    learn(){ triageStep('learning'); }
+  }
+});
+
+/* Спільний крок тріажу: позначаємо слово й гортаємо далі.
+   «Вже знаю» одразу переводить у mastered (з повними сегментами прогресу),
+   «Треба вчити» ставить у чергу вивчення (learning, без дати повторення). */
+function triageStep(status){
+  const p = App.params();
+  const w = Store.get(p.queue[p.at]);
+  if(w){
+    w.status = status;
+    w.nextReview = null;
+    if(status === 'mastered') w.timesRemembered = SRS.LADDER.length;
+    Store.addGems(1);
+    Store.logDay('triaged');
+    Store.save();
+  }
+
+  /* наступне ще не опрацьоване слово в цій смузі */
+  let next = -1;
+  for(let i = p.at + 1; i < p.queue.length; i++){
+    const x = Store.get(p.queue[i]);
+    if(x && x.status === 'new'){ next = i; break; }
+  }
+
+  if(next === -1){
+    Utils.toast(status === 'mastered' ? 'Позначено як вивчене' : 'Додано у список на вивчення', 'ok');
+    App.back();
+  } else {
+    App.replace('triage', {queue: p.queue, at: next});
+  }
+}
+
+/* views/word.js — повна картка слова + екран «Compare with» (порівняння синонімів) */
+
+Views.register('word', {
+  title: '',
+  tab: 'map',
+  back: true,
+  state: { tab:'def', cmpWith:null, cmpText:null, cmpLoading:false },
+
+  render(p){
+    const w = Store.get(p.id);
+    if(!w) return `<div class="empty">Слово не знайдено</div>`;
+    const s = this.state;
+
+    return `
+    <div class="cover" style="background:${Utils.cover(w.word)};margin-bottom:-24px">
+      <span class="letter">${Utils.esc(w.word[0].toUpperCase())}</span>
+    </div>
+
+    <div class="card" style="position:relative">
+      <div class="wordline">
+        <div style="flex:1;min-width:0">
+          <h1 style="font-size:26px;margin:0;font-weight:600">${Utils.esc(w.word)}</h1>
+          <div class="row" style="align-items:center;gap:8px;margin-top:6px">
+            <button class="speaker" data-act="say" style="font-size:17px">🔊</button>
+            <span class="phon">${Utils.esc(w.phonetic || '')}</span>
+          </div>
+        </div>
+        <span style="color:var(--cyan);font-size:14px">${Utils.esc(w.pos || '')}</span>
+      </div>
+
+      ${w.definition ? `<div style="font-size:18px;font-weight:600;line-height:1.45;margin-top:14px">${Utils.esc(w.definition)}</div>` : ''}
+
+      <div class="row between" style="margin-top:14px;align-items:center">
+        <button class="speaker" data-act="sayEx" style="color:var(--cyan);font-size:20px">▶</button>
+        <span class="trans" style="margin:0">${Utils.esc(w.translation || '—')}</span>
+      </div>
+
+      ${w.example ? `<div class="example">${highlight(w.example, w.word)}</div>` : ''}
+
+      <input class="note-input" data-act="note" value="${Utils.esc(w.note)}"
+             placeholder="✎ додати нотатку…" style="margin-top:12px">
+    </div>
+
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn ghost sm" data-act="fav" style="flex:1">
+        ${w.favorite ? '★ В обраному' : '☆ В обране'}
+      </button>
+      ${w.synonyms.length ? `<button class="btn ghost sm" data-act="compare" style="flex:1">⇄ Порівняти</button>` : ''}
+      ${!w.enriched ? `<button class="btn ghost sm" data-act="enrich" style="flex:1">🔍 Дані</button>` : ''}
+    </div>
+
+    ${w.synonyms.length ? panel('Синоніми', w.synonyms, 'var(--cyan)') : ''}
+    ${w.antonyms.length ? panel('Антоніми', w.antonyms, 'var(--violet-l)') : ''}
+
+    <div class="card">
+      <div class="row between">
+        <span class="muted">Статус</span>
+        <span style="font-weight:600">${statusLabel(w)}</span>
+      </div>
+      ${w.status === 'learning' || w.status === 'mastered' ? `
+      <div class="row between" style="margin-top:10px">
+        <span class="muted">Згадано разів</span>
+        <span style="font-weight:600">${w.timesRemembered}</span>
+      </div>
+      <div class="segments" style="margin-top:8px">
+        ${seg(w)}
+      </div>
+      ${w.status === 'learning' ? `<div class="row between" style="margin-top:12px">
+        <span class="muted">Наступний показ</span>
+        <span style="font-weight:600">${Utils.fmtWhen(w.nextReview)}</span>
+      </div>` : ''}` : ''}
+      <div class="row" style="margin-top:14px;gap:8px">
+        ${w.status !== 'learning' ? `<button class="btn ghost sm" data-act="toLearn" style="flex:1">Вчити</button>` : ''}
+        ${w.status !== 'mastered' ? `<button class="btn ghost sm" data-act="know" style="flex:1">Вже знаю</button>` : ''}
+        <button class="btn ghost sm" data-act="reset" style="flex:1">Скинути</button>
+      </div>
+      ${w.status === 'learning' ? `<button class="btn violet sm wide" data-act="schedule" style="margin-top:8px">
+        🗓 Запланувати повторення самостійно</button>` : ''}
+      ${w.custom ? `<button class="btn link" data-act="del" style="margin-top:6px">Видалити слово</button>` : ''}
+    </div>`;
+  },
+
+  actions: {
+    say(){ const w = Store.get(App.params().id); Utils.speak(w.word); },
+    sayEx(){ const w = Store.get(App.params().id); Utils.speak(w.example || w.word); },
+
+    note(el){
+      const w = Store.get(App.params().id);
+      w.note = el.value; Store.save();
+    },
+
+    fav(){
+      const w = Store.get(App.params().id);
+      w.favorite = !w.favorite; Store.save(); App.render();
+    },
+
+    async enrich(el){
+      el.disabled = true; el.innerHTML = '<span class="spinner"></span>';
+      const w = Store.get(App.params().id);
+      const r = await Api.enrich(w.id);
+      if(!r) Utils.toast('Нічого не знайдено', 'err');
+      App.render();
+    },
+
+    compare(){ App.push('compare', {id: App.params().id}); },
+
+    toLearn(){ setStatus('learning', 'Додано у список на вивчення'); },
+    know(){ setStatus('mastered', 'Позначено як вивчене'); },
+
+    schedule(){ openScheduleSheet(Store.get(App.params().id)); },
+
+    reset(){
+      const w = Store.get(App.params().id);
+      w.status = 'new'; w.timesRemembered = 0; w.nextReview = null; w.lastMistakeDate = null;
+      Store.save(); App.render();
+      Utils.toast('Прогрес слова скинуто');
+    },
+
+    del(){
+      const w = Store.get(App.params().id);
+      App.confirm(`Видалити «${w.word}»?`, () => { Store.remove(w.id); App.back(); });
+    }
+  }
+});
+
+/* status: 'learning' — щойно додано в чергу (дата з'явиться після першого
+   вивчення); 'mastered' — позначено як вже відоме, без проходження SRS. */
+function setStatus(status, msg){
+  const w = Store.get(App.params().id);
+  w.status = status;
+  w.nextReview = null;
+  if(status === 'mastered') w.timesRemembered = SRS.LADDER.length;
+  Store.save(); App.render();
+  Utils.toast(msg, 'ok');
+}
+
+/* ---------- Compare with ---------- */
+Views.register('compare', {
+  title: '',
+  tab: 'map',
+  back: true,
+  state: { with:null, text:null, loading:false, error:'' },
+
+  render(p){
+    const w = Store.get(p.id);
+    const s = this.state;
+    if(!w) return `<div class="empty">Слово не знайдено</div>`;
+
+    const active = s.with || w.synonyms[0];
+
+    return `
+    <div class="cmp-title">Порівняти з</div>
+
+    <div class="chips">
+      ${w.synonyms.map(x => `
+        <button class="chip ${x === active ? 'on' : ''}" data-act="pick" data-w="${Utils.esc(x)}">
+          ${Utils.esc(cap(x))}
+        </button>`).join('')}
+    </div>
+
+    ${s.loading
+      ? `<div class="center muted" style="padding:30px"><span class="spinner"></span> Готую пояснення…</div>`
+      : s.text
+        ? `<div class="cmp-text">${s.text.map(par => `<p>${par}</p>`).join('')}</div>`
+        : `<div class="card">
+             <div class="muted" style="line-height:1.6">
+               ${Api.hasAI()
+                 ? `Натисніть синонім вище, щоб побачити, чим він відрізняється від
+                    <b style="color:var(--violet-l)">${Utils.esc(w.word)}</b>.`
+                 : `Щоб отримати пояснення різниці між словами, підключіть Claude API у розділі «Ще».
+                    Без нього доступні лише самі синоніми.`}
+             </div>
+           </div>`}
+
+    ${s.error ? `<div class="card" style="color:var(--bad)">${Utils.esc(s.error)}</div>` : ''}
+
+    <div class="actions2" style="padding:0">
+      <button class="btn violet" data-act="learn">Треба вчити</button>
+      <button class="btn cyan" data-act="knew">Вже знаю</button>
+    </div>`;
+  },
+
+  mount(p){
+    const s = this.state;
+    const w = Store.get(p.id);
+    if(w && !s.with && w.synonyms.length && Api.hasAI() && !s.text && !s.loading){
+      this.actions.pick(null, {w: w.synonyms[0]});
+    }
+  },
+
+  actions: {
+    async pick(el, ds){
+      const v = Views.map.compare, s = v.state;
+      const w = Store.get(App.params().id);
+      s.with = ds.w; s.text = null; s.error = '';
+
+      if(!Api.hasAI()){
+        /* без ключа показуємо визначення синоніма з відкритого словника */
+        s.loading = true; App.render();
+        try{
+          const r = await Api.lookup(ds.w);
+          s.text = r && r.definition
+            ? [`<span class="a">${Utils.esc(cap(ds.w))}</span> — ${Utils.esc(r.definition)}`]
+            : null;
+          if(!s.text) s.error = 'Для цього слова не знайшлося визначення.';
+        }catch(e){ s.error = 'Словник недоступний.'; }
+        finally{ s.loading = false; App.render(); }
+        return;
+      }
+
+      s.loading = true; App.render();
+      try{
+        const pars = await Api.compare(w.word, ds.w);
+        s.text = pars.map(t => colorize(t, ds.w, w.word));
+      }catch(e){
+        s.error = 'Не вдалося отримати пояснення: ' + e.message;
+      }finally{
+        s.loading = false; App.render();
+      }
+    },
+
+    learn(){
+      const w = Store.get(App.params().id);
+      w.status = 'learning'; w.nextReview = null; Store.addGems(1); Store.save();
+      Utils.toast('Додано у список на вивчення', 'ok');
+      App.back();
+    },
+    knew(){
+      const w = Store.get(App.params().id);
+      w.status = 'mastered'; w.nextReview = null; w.timesRemembered = SRS.LADDER.length;
+      Store.addGems(1); Store.save();
+      Utils.toast('Позначено як вивчене', 'ok');
+      App.back();
+    }
+  }
+});
+
+/* ---------- допоміжні ---------- */
+function cap(s){ return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+
+function panel(title, items, color){
+  return `<div class="card">
+    <div class="dim" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${title}</div>
+    <div class="chips" style="justify-content:flex-start">
+      ${items.map(x => `<span class="chip" style="color:${color}">${Utils.esc(x)}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+function seg(w){
+  const n = Math.min(w.timesRemembered, SRS.SEGMENTS);
+  return Array.from({length: SRS.SEGMENTS}, (_, i) =>
+    `<i class="${w.status === 'mastered' ? 'max' : i < n ? 'on' : ''}"></i>`).join('');
+}
+
+function statusLabel(w){
+  if(w.status === 'learning') return w.nextReview ? 'вивчаю' : 'у черзі на вивчення';
+  return { new:'не опрацьоване', mastered:'вивчено' }[w.status];
+}
+
+function highlight(sentence, word){
+  const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return Utils.esc(sentence).replace(new RegExp(`\\b(${safe}\\w*)\\b`, 'gi'), '<b>$1</b>');
+}
+
+/* Підсвічує у поясненні порівнюване слово (бірюзовий) та основне (фіолетовий) */
+function colorize(text, a, b){
+  let out = Utils.esc(text);
+  const wrap = (w, cls) => {
+    const safe = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp(`\\b(${safe}\\w*)\\b`, 'gi'), `<span class="${cls}">$1</span>`);
+  };
+  wrap(a, 'a');
+  wrap(b, 'b');
+  return out;
+}
+
+/* views/learn.js — вивчення нових слів і повторення з ручним вибором інтервалу */
+
+/* ---------- Learn: слово → «Вчити» / «Пропустити» ---------- */
+Views.register('learn', {
+  title: 'Вчити',
+  tab: 'learn',
+
+  render(){
+    const queue = Store.toLearn();
+    if(!queue.length){
+      const st = Store.stats();
+      return `
+      <div class="empty">
+        <div class="big">🎓</div>
+        Черга на вивчення порожня.<br>
+        <span class="dim">Пройдіть карту знань і позначайте слова «Треба вчити».</span>
+        <div style="margin-top:20px"><button class="btn cyan" data-act="toMap">Відкрити карту знань</button></div>
+        ${st.due ? `<div style="margin-top:10px"><button class="btn ghost" data-act="toReview">
+          Є ${st.due} на повторення</button></div>` : ''}
+      </div>`;
+    }
+
+    const w = queue[0];
+    return `
+    <div class="cover" style="background:${Utils.cover(w.word)}">
+      <span class="letter">${Utils.esc(w.word[0].toUpperCase())}</span>
+      ${w.pos ? `<span class="pos-tag">${Utils.esc(w.pos)}</span>` : ''}
+    </div>
+
+    <div class="center" style="padding:26px 0 6px">
+      <h1 style="font-size:28px;margin:0;font-weight:600">${Utils.esc(w.word)}</h1>
+      <div class="phon" style="margin-top:6px">${Utils.esc(w.phonetic || '')}</div>
+    </div>
+
+    <button class="btn cyan" data-act="learn" style="margin-top:18px">Вчити</button>
+    <button class="btn link" data-act="skip">Пропустити</button>
+
+    <div class="center dim" style="margin-top:16px">У черзі: ${queue.length}</div>`;
+  },
+
+  mount(){
+    const q = Store.toLearn();
+    if(q.length && !q[0].enriched && Store.db.settings.autoEnrich){
+      Api.enrich(q[0].id).then(r => { if(r && App.top().view === 'learn') App.render(); }).catch(()=>{});
+    }
+  },
+
+  actions: {
+    toMap(){ App.go('map'); },
+    toReview(){ App.go('review'); },
+    learn(){
+      const w = Store.toLearn()[0];
+      if(w) App.push('study', {id: w.id, mode:'learn'});
+    },
+    skip(){
+      const w = Store.toLearn()[0];
+      if(!w) return;
+      /* у кінець черги: знижуємо пріоритет, лишаючи слово в списку */
+      w.rank = Math.max(0, ...Store.db.words.map(x => x.rank)) + 1;
+      Store.save(); App.render();
+    }
+  }
+});
+
+/* ---------- Study: картка з повними даними + планування ---------- */
+Views.register('study', {
+  title: '',
+  tab: 'learn',
+  back: true,
+
+  render(p){
+    const w = Store.get(p.id);
+    if(!w) return `<div class="empty">Слово не знайдено</div>`;
+    const done = p.done;
+
+    return `
+    <div class="cover" style="background:${Utils.cover(w.word)};margin-bottom:-24px">
+      <span class="letter">${Utils.esc(w.word[0].toUpperCase())}</span>
+    </div>
+
+    <div class="card">
+      <div class="wordline">
+        <div style="flex:1;min-width:0">
+          <h1 style="font-size:26px;margin:0;font-weight:600">${Utils.esc(w.word)}</h1>
+          <div class="row" style="align-items:center;gap:8px;margin-top:6px">
+            <button class="speaker" data-act="say" style="font-size:17px">🔊</button>
+            <span class="phon">${Utils.esc(w.phonetic || '')}</span>
+          </div>
+        </div>
+        <span style="color:var(--cyan);font-size:14px">${Utils.esc(w.pos || '')}</span>
+      </div>
+
+      ${w.definition
+        ? `<div style="font-size:18px;font-weight:600;line-height:1.45;margin-top:14px">${Utils.esc(w.definition)}</div>`
+        : `<div class="muted" style="margin-top:14px">Визначення ще не завантажено</div>`}
+
+      <div class="row between" style="margin-top:14px;align-items:center">
+        <button class="speaker" data-act="sayEx" style="color:var(--cyan);font-size:20px">▶</button>
+        <span class="trans" style="margin:0">${Utils.esc(w.translation || '—')}</span>
+      </div>
+
+      ${w.example ? `<div class="example">${highlight(w.example, w.word)}</div>` : ''}
+
+      ${w.synonyms.length ? `<button class="btn ghost sm" data-act="compare" style="margin-top:14px">
+         ⇄ Порівняти зі схожими словами</button>` : ''}
+    </div>
+
+    <div class="actionbar" style="border-radius:12px;border:1px solid var(--line)">
+      <div class="left">
+        <div class="tick">✓</div>
+        <div>
+          <div class="lbl">${timesLabel(w)}</div>
+          <div class="segments">${seg(w)}</div>
+        </div>
+      </div>
+      <button class="btn violet sm" data-act="schedule" style="width:auto;padding:12px 16px">
+        ${w.nextReview ? 'Повторити ' + Utils.fmtWhen(w.nextReview) : 'Запланувати'} ▾
+      </button>
+    </div>`;
+  },
+
+  actions: {
+    say(){ Utils.speak(Store.get(App.params().id).word); },
+    sayEx(){ const w = Store.get(App.params().id); Utils.speak(w.example || w.word); },
+    compare(){ App.push('compare', {id: App.params().id}); },
+    schedule(){ openScheduleSheet(Store.get(App.params().id)); }
+  }
+});
+/* ---------- нижній лист планування ---------- */
+function openScheduleSheet(w, afterSave){
+  const rec = SRS.recommendedOption(w);
+  const recDays = SRS.recommendedDays(w);
+  const times = w.timesRemembered;
+
+  App.sheet(`
+    <h2>${Utils.esc(w.word)}</h2>
+    <div class="sub">Разів згадано: ${times === 0 ? 'жодного' : times}</div>
+    <div style="font-weight:600;margin-bottom:6px">Наступне повторення:</div>
+    ${SRS.OPTIONS.map(o => `
+      <label class="radio">
+        <input type="radio" name="ivl" value="${o.id}" ${o.id === rec ? 'checked' : ''}>
+        <span>${o.label}${o.id === rec ? ' <span class="rec">(рекомендовано)</span>' : ''}</span>
+      </label>`).join('')}
+    <label class="radio">
+      <input type="radio" name="ivl" value="custom" id="ivl-custom">
+      <span>Свій варіант: через
+        <input type="number" id="custom-days" min="1" max="1000" value="${recDays}"
+               style="width:64px;display:inline-block;margin:0 4px"
+               oninput="document.getElementById('ivl-custom').checked=true">
+        дн.</span>
+    </label>
+    <button class="btn violet" data-act="confirmSchedule" style="margin-top:16px">Продовжити</button>
+  `, {
+    confirmSchedule(){
+      const sel = document.querySelector('input[name=ivl]:checked');
+      const selId = sel ? sel.value : rec;
+
+      let days;
+      if(selId === 'custom'){
+        const n = parseInt(document.getElementById('custom-days').value, 10);
+        days = n > 0 ? n : recDays;
+      } else {
+        const opt = SRS.OPTIONS.find(o => o.id === selId);
+        days = opt ? opt.days : recDays;
+      }
+
+      SRS.remember(w, days);
+      Store.addGems(1);
+      Store.logDay('learned');
+      Store.save();
+      if(afterSave) afterSave();
+      App.closeSheet();
+
+      const msg = days === null ? 'Слово вивчено 🎓' : 'Повторимо ' + Utils.fmtWhen(w.nextReview);
+      Utils.toast(msg, 'ok');
+
+      /* з екрана вивчення повертаємось до наступного слова */
+      if(App.top().view === 'study') App.back();
+      else App.render();
+    }
+  });
+}
+
+function timesLabel(w){
+  const n = w.timesRemembered;
+  if(n === 0) return 'Ще не вчили';
+  if(n === 1) return 'Один раз';
+  return `${n} раз${n < 5 ? 'и' : 'ів'}`;
+}
+
+/* views/tests.js — тести для слів, які стоять у черзі на вивчення.
+   Кожен тип оголошує, яким словам він підходить (fits) і як зібрати запитання (build). */
+
+const TEST_TYPES = {
+  en_ua: {
+    label:'Слово → переклад', hint:'обрати правильний переклад',
+    fits: w => !!w.translation,
+    build(w, pool){
+      return {kind:'choice',
+        prompt:`Як перекладається <b>${Utils.esc(w.word)}</b>?`,
+        correct:w.translation,
+        options:withDistractors(w.translation, pool.map(x => x.translation))};
+    }
+  },
+
+  ua_en: {
+    label:'Переклад → слово', hint:'обрати правильне англійське слово',
+    fits: w => !!w.translation,
+    build(w, pool){
+      return {kind:'choice',
+        prompt:`Яке англійське слово означає <b>${Utils.esc(w.translation)}</b>?`,
+        correct:w.word,
+        options:withDistractors(w.word, pool.map(x => x.word))};
+    }
+  },
+
+  cloze: {
+    label:'Слово в реченні', hint:'вставити пропущене слово',
+    fits: w => !!sentenceFor(w),
+    build(w, pool){
+      const gapped = Utils.esc(sentenceFor(w))
+        .replace(new RegExp(`\\b${escRe(w.word)}\\w*\\b`, 'i'), '<span class="gap"></span>');
+      return {kind:'choice',
+        prompt:`Вставте пропущене слово:<br><i style="color:var(--muted)">${gapped}</i>`,
+        correct:w.word,
+        options:withDistractors(w.word, pool.map(x => x.word))};
+    }
+  },
+
+  typing: {
+    label:'Написати вручну', hint:'ввести слово з клавіатури',
+    fits: w => !!w.translation,
+    build(w){
+      return {kind:'typing',
+        prompt:`Напишіть англійською: <b>${Utils.esc(w.translation)}</b>`,
+        correct:w.word};
+    }
+  },
+
+  spelling: {
+    label:'Правильне написання', hint:'обрати варіант без помилок',
+    fits: w => w.word.length >= 5 && /^[a-z]+$/i.test(w.word),
+    build(w){
+      return {kind:'choice',
+        prompt:`Який варіант написано правильно? <span class="muted">(${Utils.esc(w.translation)})</span>`,
+        correct:w.word,
+        options:Utils.shuffle([w.word, ...misspellings(w.word, 3)])};
+    }
+  },
+
+  definition: {
+    label:'Слово за визначенням', hint:'впізнати слово з англійського опису',
+    fits: w => !!w.definition,
+    build(w, pool){
+      return {kind:'choice',
+        prompt:`Яке слово підходить під опис?<br><i style="color:var(--muted)">${Utils.esc(w.definition)}</i>`,
+        correct:w.word,
+        options:withDistractors(w.word, pool.map(x => x.word))};
+    }
+  },
+
+  defcard: {
+    label:'Слово → визначення', hint:'обрати правильне визначення карткою',
+    fits: w => !!w.definition,
+    build(w, pool){
+      const distractPool = pool.filter(x => x.id !== w.id && x.definition && x.definition !== w.definition);
+      const distractors = Utils.pick(distractPool, 2).map(x => x.definition);
+      if(distractors.length < 2) return null;
+      return {kind:'defcard',
+        prompt:`Оберіть визначення до слова <b>${Utils.esc(w.word)}</b>`,
+        correct:w.definition,
+        options:Utils.shuffle([w.definition, ...distractors])};
+    }
+  },
+
+  listen: {
+    label:'Прослухати й обрати', hint:'на слух вибрати правильне написання',
+    fits: w => w.word.length >= 4 && /^[a-z]+$/i.test(w.word),
+    build(w){
+      return {kind:'listen',
+        prompt:'Прослухайте слово і оберіть правильне написання',
+        correct:w.word,
+        options:Utils.shuffle([w.word, ...misspellings(w.word, 3)])};
+    }
+  },
+
+  synonym: {
+    label:'Синонім', hint:'обрати слово з близьким значенням',
+    fits: w => w.synonyms && w.synonyms.length > 0,
+    build(w, pool){
+      const correct = Utils.pick(w.synonyms, 1)[0];
+      const others = pool.filter(x => x.id !== w.id).map(x => x.word)
+        .concat(pool.flatMap(x => x.id !== w.id ? (x.antonyms || []) : []));
+      return {kind:'choice',
+        prompt:`Яке слово найближче за значенням до <b>${Utils.esc(w.word)}</b>?`,
+        correct, options:withDistractors(correct, others)};
+    }
+  },
+
+  antonym: {
+    label:'Антонім', hint:'обрати протилежне за значенням',
+    fits: w => w.antonyms && w.antonyms.length > 0,
+    build(w, pool){
+      const correct = Utils.pick(w.antonyms, 1)[0];
+      const others = pool.filter(x => x.id !== w.id).map(x => x.word).concat(w.synonyms || []);
+      return {kind:'choice',
+        prompt:`Яке слово протилежне за значенням до <b>${Utils.esc(w.word)}</b>?`,
+        correct, options:withDistractors(correct, others)};
+    }
+  }
+};
+
+Views.register('tests', {
+  title: 'Тести',
+  tab: 'tests',
+  form: { scope:'toLearn', count:'10' },
+  state: {
+    enabled: Object.keys(TEST_TYPES).reduce((a,k) => (a[k] = true, a), {}),
+    quiz: null, answered: null, typed: ''
+  },
+
+  render(){
+    const s = this.state;
+    if(s.quiz && s.quiz.i >= s.quiz.qs.length) return this.summary();
+    if(s.quiz) return this.question();
+    return this.setup();
+  },
+
+  /* ---------- налаштування ---------- */
+  setup(){
+    const s = this.state, f = this.form;
+    const pool = this.pool();
+    const st = Store.stats();
+
+    if(pool.length < 4){
+      return `
+      <div class="empty">
+        <div class="big">🧪</div>
+        У цій вибірці лише ${pool.length} ${pool.length === 1 ? 'слово' : 'слів'} — для тесту потрібно щонайменше 4.
+        <div style="margin-top:8px" class="dim">
+          Позначайте слова «Треба вчити» на карті знань, і вони потраплять сюди.
+        </div>
+        <div style="margin-top:22px" class="row" style="justify-content:center">
+          <button class="btn cyan" data-act="toMap">Відкрити карту знань</button>
+        </div>
+      </div>`;
+    }
+
+    const typeRows = Object.entries(TEST_TYPES).map(([id, t]) => {
+      const n = pool.filter(w => t.fits(w)).length;
+      const off = n < 1;
+      return `
+      <label class="chk" style="${off ? 'opacity:.4' : ''}">
+        <input type="checkbox" data-act="tgl" data-v="${id}" ${s.enabled[id] && !off ? 'checked' : ''} ${off ? 'disabled' : ''}>
+        <span>${t.label} <span class="dim">— ${t.hint} · ${n}</span></span>
+      </label>`;
+    }).join('');
+
+    return `
+    <div class="split">
+      <div>
+        <div class="card">
+          <h2>Що перевіряємо</h2>
+          <label class="f"><span>Вибірка слів</span>
+            <select data-model="scope">
+              <option value="toLearn"${f.scope==='toLearn'?' selected':''}>У черзі на вивчення (${st.toLearn})</option>
+              <option value="studying"${f.scope==='studying'?' selected':''}>Ті, що вивчаю (${st.studying})</option>
+              <option value="due"${f.scope==='due'?' selected':''}>На повторення сьогодні (${st.due})</option>
+              <option value="active"${f.scope==='active'?' selected':''}>Усі активні (черга + вивчаю)</option>
+              <option value="mastered"${f.scope==='mastered'?' selected':''}>Вивчені — перевірка (${st.mastered})</option>
+            </select>
+          </label>
+          <label class="f"><span>Кількість запитань</span>
+            <select data-model="count">
+              ${['5','10','20','40'].map(n=>`<option${f.count===n?' selected':''}>${n}</option>`).join('')}
+            </select>
+          </label>
+          <label class="chk">
+            <input type="checkbox" data-act="tglSrs" ${Store.db.settings.testsAffectSrs?'checked':''}>
+            <span>Тести впливають на розклад
+              <span class="dim">— правильна відповідь просуває слово, помилка повертає на завтра</span></span>
+          </label>
+          <button class="btn cyan wide" data-act="start" style="margin-top:6px">
+            Почати тест · ${pool.length} слів доступно
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Типи запитань</h2>
+          ${typeRows}
+          <div class="dim" style="margin-top:10px;line-height:1.6">
+            Типи, для яких бракує даних, вимкнені. Визначення, приклади, синоніми
+            й антоніми підтягуються з відкритих словників — натисніть 🔍 у картці слова
+            або увімкніть автозбагачення в «Ще».
+          </div>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  /* ---------- запитання ---------- */
+  question(){
+    const s = this.state;
+    const q = s.quiz.qs[s.quiz.i];
+    const a = s.answered;
+    const pct = Math.round(s.quiz.i / s.quiz.qs.length * 100);
+
+    /* «Далі» показуємо лише після помилки — правильну відповідь застосунок
+       гортає сам, без зупинки на кнопці */
+    const nextBtn = (a && !a.ok) ? `<div class="row" style="margin-top:10px"><button class="btn cyan" id="next-btn" data-act="next">Далі →</button></div>` : '';
+
+    let body;
+    if(q.kind === 'typing'){
+      body = `<input id="tin" value="${Utils.esc(s.typed)}" placeholder="введіть слово англійською"
+                autocomplete="off" autocapitalize="off" spellcheck="false" ${a?'disabled':''}>
+         ${a ? `<div class="tresult ${a.ok?'ok':'no'}">
+                  ${a.ok ? '✓ Правильно!'
+                         : `✕ Ви написали «${Utils.esc(a.val)}». Правильно: <span class="right">${Utils.esc(q.correct)}</span>`}
+                </div>` : ''}
+         <div class="row" style="margin-top:16px">
+           ${a ? (a.ok ? '' : `<button class="btn cyan" id="next-btn" data-act="next">Далі →</button>`)
+               : `<button class="btn cyan" data-act="submit">Перевірити</button>`}
+         </div>`;
+    } else if(q.kind === 'listen'){
+      body = `
+        <div class="center" style="padding:8px 0 22px">
+          <button class="playbtn" data-act="playWord">${a ? '🔊' : '▶'}</button>
+        </div>
+        ${q.options.map(o => {
+          let c = 'optbtn';
+          if(a){ if(o === q.correct) c += ' correct'; else if(o === a.val) c += ' wrong'; }
+          return `<button class="${c}" data-act="answer" data-v="${Utils.esc(o)}" ${a?'disabled':''}>${Utils.esc(o)}</button>`;
+        }).join('')}
+        ${nextBtn}`;
+    } else if(q.kind === 'defcard'){
+      body = q.options.map(o => {
+        let c = 'defcard';
+        if(a){ if(o === q.correct) c += ' correct'; else if(o === a.val) c += ' wrong'; }
+        return `<button class="${c}" data-act="answer" data-v="${Utils.esc(o)}" ${a?'disabled':''}>
+          <span class="dc-thumb" style="background:${Utils.cover(o)}"></span>
+          <span class="dc-text">${Utils.esc(o)}</span>
+        </button>`;
+      }).join('') + nextBtn;
+    } else {
+      body = q.options.map(o => {
+        let c = 'optbtn';
+        if(a){ if(o === q.correct) c += ' correct'; else if(o === a.val) c += ' wrong'; }
+        return `<button class="${c}" data-act="answer" data-v="${Utils.esc(o)}" ${a?'disabled':''}>${Utils.esc(o)}</button>`;
+      }).join('') + nextBtn;
+    }
+
+    return `
+    <div class="wrap narrow">
+      <div class="progressbar"><div style="width:${pct}%"></div></div>
+      <div class="card qcard" data-qkey="${s.quiz.i}">
+        <div class="qkind">${TEST_TYPES[q.type].label}</div>
+        <div class="qtitle">${q.prompt}</div>
+        ${body}
+      </div>
+      <div class="row between">
+        <span class="muted">Запитання ${s.quiz.i + 1} / ${s.quiz.qs.length}</span>
+        <span class="muted">Правильних: ${s.quiz.score}</span>
+      </div>
+    </div>`;
+  },
+
+  /* ---------- підсумок ---------- */
+  summary(){
+    const q = this.state.quiz;
+    const pct = Math.round(q.score / q.qs.length * 100);
+    const wrong = q.qs.filter(x => x.wrong);
+
+    return `
+    <div class="wrap narrow">
+      <div class="card center">
+        <div style="font-size:52px">${pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪'}</div>
+        <h2 style="margin-top:8px">Результат тесту</h2>
+        <div class="statgrid" style="margin-top:14px">
+          <div class="stat"><b>${q.score}/${q.qs.length}</b><span>правильних</span></div>
+          <div class="stat"><b style="color:var(--cyan)">${pct}%</b><span>результат</span></div>
+          <div class="stat"><b style="color:var(--bad)">${wrong.length}</b><span>помилок</span></div>
+        </div>
+      </div>
+
+      ${wrong.length ? `
+      <div class="card">
+        <h2>Над чим попрацювати</h2>
+        <div class="mistakes">
+          ${wrong.map(x => {
+            const w = Store.get(x.wordId);
+            return `<div class="mistake">
+              <b>${Utils.esc(w ? w.word : '')}</b>
+              <span class="muted">правильно: ${Utils.esc(x.correct)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="row">
+        <button class="btn cyan" data-act="restart">Новий тест</button>
+        ${wrong.length ? `<button class="btn ghost" data-act="retry">Перепройти помилки</button>` : ''}
+        <button class="btn ghost" data-act="toReview">До повторень</button>
+      </div>
+    </div>`;
+  },
+
+  mount(){
+    const inp = document.getElementById('tin');
+    if(inp && !this.state.answered){
+      inp.focus();
+      inp.onkeydown = ev => { if(ev.key === 'Enter'){ ev.preventDefault(); this.actions.submit(); } };
+    }
+
+    const s = this.state;
+    if(s.quiz && s.quiz.i < s.quiz.qs.length){
+      const q = s.quiz.qs[s.quiz.i];
+      if(q.kind === 'listen' && !s.answered) Utils.speakForce(q.correct);
+    }
+  },
+
+  /* слова згідно з обраною вибіркою.
+     Обидва «toLearn»/«studying» — це підмножини статусу 'learning',
+     розрізнені наявністю дати наступного повторення. */
+  pool(){
+    const f = this.form;
+    const all = Store.db.words;
+    if(f.scope === 'toLearn')  return all.filter(w => w.status === 'learning' && !w.nextReview);
+    if(f.scope === 'studying') return all.filter(w => w.status === 'learning' && !!w.nextReview);
+    if(f.scope === 'due')      return Store.due();
+    if(f.scope === 'mastered') return all.filter(w => w.status === 'mastered');
+    return all.filter(w => w.status === 'learning');
+  },
+
+  actions: {
+    toMap(){ App.go('map'); },
+    toReview(){ App.go('review'); },
+    tgl(el, ds){ Views.map.tests.state.enabled[ds.v] = el.checked; },
+    tglSrs(el){ Store.db.settings.testsAffectSrs = el.checked; Store.save(); },
+
+    playWord(){
+      const s = Views.map.tests.state;
+      const q = s.quiz.qs[s.quiz.i];
+      Utils.speakForce(q.correct);
+    },
+
+    start(){
+      const v = Views.map.tests, s = v.state;
+      const pool = v.pool();
+      if(pool.length < 4){ Utils.toast('Замало слів у вибірці', 'err'); return; }
+
+      const types = Object.keys(TEST_TYPES).filter(k => s.enabled[k]);
+      if(!types.length){ Utils.toast('Оберіть хоча б один тип запитань', 'err'); return; }
+
+      const total = Math.min(+v.form.count, pool.length * 2);
+      const bag = Utils.shuffle(pool);
+      const qs = [];
+      let guard = 0;
+
+      while(qs.length < total && guard++ < total * 14){
+        const w = bag[qs.length % bag.length];
+        const usable = types.filter(t => TEST_TYPES[t].fits(w));
+        if(!usable.length) continue;
+        const type = Utils.pick(usable, 1)[0];
+        const q = TEST_TYPES[type].build(w, pool);
+        if(!q || (q.options && q.options.length < 2)) continue;
+        q.type = type; q.wordId = w.id;
+        qs.push(q);
+      }
+
+      if(!qs.length){ Utils.toast('Не вдалося скласти запитання', 'err'); return; }
+      s.quiz = {qs: Utils.shuffle(qs), i:0, score:0};
+      s.answered = null; s.typed = '';
+      App.render();
+    },
+
+    answer(el, ds){ grade(ds.v); },
+    submit(){ grade((document.getElementById('tin')?.value || '').trim()); },
+
+    next(){ advance(); },
+
+    restart(){
+      const s = Views.map.tests.state;
+      s.quiz = null; s.answered = null; s.typed = '';
+      App.render();
+    },
+
+    retry(){
+      const s = Views.map.tests.state;
+      const wrong = s.quiz.qs.filter(x => x.wrong).map(x => ({...x, wrong:false}));
+      s.quiz = {qs: Utils.shuffle(wrong), i:0, score:0};
+      s.answered = null; s.typed = '';
+      App.render();
+    }
+  }
+});
+
+/* Переходить до наступного питання (або підсумку) й скидає стан відповіді */
+function advance(){
+  const s = Views.map.tests.state;
+  s.quiz.i++; s.answered = null; s.typed = '';
+  App.render();
+}
+
+/* ---------- перевірка відповіді ---------- */
+function grade(val){
+  const s = Views.map.tests.state;
+  if(s.answered) return;
+  const q = s.quiz.qs[s.quiz.i];
+  const qi = s.quiz.i;
+
+  const ok = q.kind === 'typing'
+    ? Utils.norm(val) === Utils.norm(q.correct)
+    : val === q.correct;
+
+  s.answered = {val, ok};
+  s.typed = val;
+  if(ok) s.quiz.score++; else q.wrong = true;
+
+  const w = Store.get(q.wordId);
+  if(w && Store.db.settings.testsAffectSrs){
+    if(ok){
+      /* правильна відповідь просуває слово далі за рекомендованим інтервалом
+         (враховуючи бонус за «чистий» без помилок день) */
+      SRS.remember(w, SRS.recommendedDays(w));
+      Store.addGems(1);
+      Store.logDay('reviewed');
+    } else {
+      /* помилка завжди повертає слово в активне повторення на завтра —
+         навіть якщо воно щойно було «нове» чи вже «вивчене» */
+      SRS.forget(w);
+      Store.logDay('reviewed');
+    }
+    Store.save();
+  }
+
+  App.render();
+  if(w) Utils.speak(w.word);
+
+  /* правильну відповідь не зупиняємо кнопкою — коротко показуємо зелену
+     підсвітку і одразу гортаємо далі. Помилку показуємо і чекаємо на
+     свідомий клік «Далі», щоб встигнути прочитати правильну відповідь. */
+  if(ok){
+    setTimeout(() => {
+      if(App.top().view !== 'tests') return;
+      if(!s.quiz || s.quiz.i !== qi) return;   // питання вже змінилось іншим шляхом
+      advance();
+    }, 550);
+  }
+}
+
+/* ---------- допоміжні ---------- */
+function withDistractors(correct, candidates){
+  const seen = new Set([Utils.norm(correct)]);
+  const out = [];
+  for(const c of Utils.shuffle(candidates)){
+    const n = Utils.norm(c);
+    if(!n || seen.has(n)) continue;
+    seen.add(n); out.push(c);
+    if(out.length === 3) break;
+  }
+  return Utils.shuffle([correct, ...out]);
+}
+
+function sentenceFor(w){
+  const re = new RegExp(`\\b${escRe(w.word)}`, 'i');
+  return (w.example && re.test(w.example)) ? w.example : '';
+}
+
+function escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/* правдоподібні орфографічні помилки для тесту на написання */
+function misspellings(word, n){
+  const out = new Set(), w = word.toLowerCase(), vow = 'aeiou';
+  const variants = [
+    () => { const i = 1 + Math.floor(Math.random() * Math.max(1, w.length-2));
+            return w.slice(0,i) + w[i+1] + w[i] + w.slice(i+2); },
+    () => { const i = 1 + Math.floor(Math.random() * (w.length-1));
+            return w.slice(0,i) + w[i] + w.slice(i); },
+    () => { const i = 1 + Math.floor(Math.random() * (w.length-2));
+            return w.slice(0,i) + w.slice(i+1); },
+    () => { const ix = [...w].map((c,i) => vow.includes(c) ? i : -1).filter(i => i > 0);
+            if(!ix.length) return '';
+            const i = ix[Math.floor(Math.random()*ix.length)];
+            const alt = vow.replace(w[i], '');
+            return w.slice(0,i) + alt[Math.floor(Math.random()*alt.length)] + w.slice(i+1); }
+  ];
+  let g = 0;
+  while(out.size < n && g++ < 50){
+    const c = variants[g % variants.length]();
+    if(c && c !== w && c.length > 2) out.add(c);
+  }
+  const cap = word[0] === word[0].toUpperCase();
+  return [...out].slice(0, n).map(s => cap ? s[0].toUpperCase() + s.slice(1) : s);
+}
+
+/* views/review.js — щоденний трекінг повторень:
+   що настало сьогодні, що прострочено, що попереду, історія активності. */
+
+Views.register('review', {
+  title: 'Повторення',
+  tab: 'review',
+
+  render(){
+    const today = Utils.today();
+    const due = Store.due();
+    const overdue = due.filter(w => w.nextReview < today);
+    const exactly = due.filter(w => w.nextReview === today);
+    const st = Store.stats();
+    const h = Store.db.history[today] || {reviewed:0, learned:0, triaged:0};
+
+    return `
+    <div class="statgrid" style="margin-bottom:18px">
+      <div class="stat"><b style="color:${due.length ? 'var(--violet-l)' : 'var(--good)'}">${due.length}</b><span>на сьогодні</span></div>
+      <div class="stat"><b style="color:${overdue.length ? 'var(--bad)' : 'var(--text)'}">${overdue.length}</b><span>прострочено</span></div>
+      <div class="stat"><b style="color:var(--cyan)">${h.reviewed}</b><span>зроблено сьогодні</span></div>
+      <div class="stat"><b>${st.studying}</b><span>у роботі</span></div>
+      <div class="stat"><b style="color:var(--good)">${dayStreak()}</b><span>днів поспіль</span></div>
+    </div>
+
+    <div class="split">
+      <div>
+        ${due.length ? `
+        <div class="card">
+          <h2>Черга на сьогодні</h2>
+          ${overdue.length ? `<p class="muted" style="margin:-4px 0 12px">
+            ${overdue.length} ${plural(overdue.length,'слово','слова','слів')} прострочено —
+            почніть з них.</p>` : ''}
+          <div class="duelist">
+            ${due.slice(0, 40).map(w => `
+              <span class="duechip ${w.nextReview < today ? 'over' : ''}"
+                    data-act="peek" data-id="${w.id}" style="cursor:pointer">
+                ${Utils.esc(w.word)}<small>${w.nextReview < today ? Utils.fmtWhen(w.nextReview) : 'сьогодні'}</small>
+              </span>`).join('')}
+            ${due.length > 40 ? `<span class="duechip">…ще ${due.length - 40}</span>` : ''}
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="btn cyan" data-act="startSession">Почати повторення (${due.length})</button>
+            <button class="btn ghost" data-act="testDue">Прогнати тестом</button>
+          </div>
+        </div>`
+        : `<div class="card center" style="padding:44px 20px">
+             <div style="font-size:48px">✅</div>
+             <h2 style="margin-top:10px">На сьогодні все повторено</h2>
+             <p class="muted">${nextUpText()}</p>
+             <div class="row" style="justify-content:center;margin-top:16px">
+               <button class="btn cyan" data-act="toLearn">Вчити нові слова</button>
+               <button class="btn ghost" data-act="toTests">Пройти тест</button>
+             </div>
+           </div>`}
+
+        <div class="card">
+          <h2>Що попереду — наступні 14 днів</h2>
+          ${forecast()}
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Активність</h2>
+          ${heatmap()}
+          <div class="heat-legend">
+            менше <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> більше
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Найближчі дати</h2>
+          ${schedulePreview()}
+        </div>
+      </div>
+    </div>`;
+  },
+
+  actions: {
+    toLearn(){ App.go('learn'); },
+    toTests(){ App.go('tests'); },
+    testDue(){
+      Views.map.tests.form.scope = 'due';
+      Views.map.tests.state.quiz = null;
+      App.go('tests');
+    },
+    peek(el, ds){ App.push('word', {id: ds.id}); },
+    startSession(){ App.push('session', {}); }
+  }
+});
+
+/* ---------- сама сесія повторення ---------- */
+Views.register('session', {
+  title: 'Повторення',
+  tab: 'review',
+  back: true,
+  state: { shown:false, done:0, good:0 },
+
+  render(){
+    const s = this.state;
+    const due = Store.due();
+
+    if(!due.length){
+      return `
+      <div class="wrap narrow">
+        <div class="card center" style="padding:44px 20px">
+          <div style="font-size:48px">🎉</div>
+          <h2 style="margin-top:10px">Сесію завершено</h2>
+          <div class="statgrid" style="margin-top:14px">
+            <div class="stat"><b>${s.done}</b><span>повторено</span></div>
+            <div class="stat"><b style="color:var(--good)">${s.good}</b><span>згадали</span></div>
+            <div class="stat"><b style="color:var(--cyan)">${s.done ? Math.round(s.good/s.done*100) : 0}%</b><span>успішність</span></div>
+          </div>
+          <div class="row" style="justify-content:center;margin-top:18px">
+            <button class="btn cyan" data-act="back2">До трекера</button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const w = due[0];
+    return `
+    <div class="wrap narrow">
+      <div class="progressbar"><div style="width:${s.done ? Math.round(s.done/(s.done+due.length)*100) : 0}%"></div></div>
+
+      <div class="cover" style="background:${Utils.cover(w.word)}">
+        <span class="letter">${Utils.esc(w.word[0].toUpperCase())}</span>
+      </div>
+
+      <div class="center" style="padding:22px 0 4px">
+        <h1 style="font-size:30px;margin:0;font-weight:600">${Utils.esc(w.word)}</h1>
+        <div class="phon" style="margin-top:6px">${Utils.esc(w.phonetic || '')}</div>
+        <button class="speaker" data-act="say" style="margin-top:4px">🔊</button>
+      </div>
+
+      ${s.shown ? `
+        <div class="card">
+          <div class="trans" style="margin:0">${Utils.esc(w.translation || '—')}</div>
+          ${w.definition ? `<div class="defn">${Utils.esc(w.definition)}</div>` : ''}
+          ${w.example ? `<div class="example">${hl(w.example, w.word)}</div>` : ''}
+        </div>
+        <div class="actions2">
+          <button class="btn ghost" data-act="forgot">Забув</button>
+          <button class="btn cyan" data-act="remembered">Згадав</button>
+        </div>`
+      : `<button class="btn cyan wide" data-act="show" style="margin-top:16px">Показати переклад</button>`}
+
+      <div class="center dim" style="margin-top:16px">Залишилось: ${due.length}</div>
+    </div>`;
+  },
+
+  actions: {
+    back2(){ App.back(); },
+    say(){ const d = Store.due()[0]; if(d) Utils.speak(d.word); },
+    show(){
+      Views.map.session.state.shown = true;
+      App.render();
+      const d = Store.due()[0]; if(d) Utils.speak(d.word);
+    },
+    forgot(){
+      const s = Views.map.session.state;
+      const w = Store.due()[0];
+      SRS.forget(w); Store.logDay('reviewed'); Store.save();
+      s.done++; s.shown = false;
+      App.render();
+      Utils.toast('Повторимо завтра');
+    },
+    remembered(){
+      /* автоматично плануємо наступне повторення за рекомендованим інтервалом
+         SRS — без зупинки на виборі дати. Вручну можна виправити окреме
+         слово на його картці кнопкою «Повторити ...» / «Запланувати». */
+      const s = Views.map.session.state;
+      const w = Store.due()[0];
+      SRS.remember(w, SRS.recommendedDays(w));
+      Store.addGems(1);
+      Store.logDay('reviewed');
+      Store.save();
+      s.done++; s.good++; s.shown = false;
+      App.render();
+      Utils.toast(w.nextReview ? 'Повторимо ' + Utils.fmtWhen(w.nextReview) : 'Слово вивчено 🎓', 'ok');
+    }
+  }
+});
+
+/* ---------- віджети трекінгу ---------- */
+
+/* Скільки слів настане в кожен з наступних 14 днів */
+function forecast(){
+  const today = Utils.today();
+  const days = [];
+  const overdue = Store.db.words.filter(w => w.status === 'learning' && w.nextReview && w.nextReview < today).length;
+
+  for(let i = 0; i < 14; i++){
+    const d = Utils.addDays(today, i);
+    const n = Store.db.words.filter(w => w.status === 'learning' && w.nextReview === d).length;
+    days.push({d, n, i});
+  }
+  if(overdue) days[0].n += overdue;
+
+  const max = Math.max(1, ...days.map(x => x.n));
+  const names = ['нд','пн','вт','ср','чт','пт','сб'];
+
+  return `<div class="forecast">
+    ${days.map(x => {
+      const dt = new Date(x.d + 'T00:00:00');
+      const cls = x.i === 0 ? (overdue ? 'over' : 'today') : '';
+      return `<div class="col ${cls}" title="${x.d}: ${x.n}">
+        <span class="vl">${x.n || ''}</span>
+        <div class="bar" style="height:${Math.round(x.n / max * 100)}%"></div>
+        <span class="lb">${x.i === 0 ? 'сьогодні' : names[dt.getDay()] + ' ' + dt.getDate()}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* Теплова мапа активності за 15 тижнів */
+function heatmap(){
+  const cells = [];
+  const today = Utils.today();
+  /* вирівнюємо початок на понеділок, щоб рядки збігалися з днями тижня */
+  const shift = (new Date(today + 'T00:00:00').getDay() + 6) % 7;
+  for(let i = 104 + shift; i >= 0; i--){
+    const d = Utils.addDays(today, -i);
+    const h = Store.db.history[d];
+    const n = h ? (h.reviewed || 0) + (h.learned || 0) : 0;
+    const lvl = n === 0 ? '' : n < 5 ? 'l1' : n < 12 ? 'l2' : n < 25 ? 'l3' : 'l4';
+    cells.push(`<i class="${lvl}" title="${d}: ${n}"></i>`);
+  }
+  return `<div class="heat">${cells.join('')}</div>`;
+}
+
+/* Найближчі дати з переліком слів */
+function schedulePreview(){
+  const today = Utils.today();
+  const map = {};
+  Store.db.words
+    .filter(w => w.status === 'learning' && w.nextReview && w.nextReview > today)
+    .forEach(w => { (map[w.nextReview] = map[w.nextReview] || []).push(w.word); });
+
+  const dates = Object.keys(map).sort().slice(0, 8);
+  if(!dates.length) return `<div class="muted">Поки нічого не заплановано.</div>`;
+
+  return dates.map(d => `
+    <div class="row between" style="padding:9px 0;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-size:14px">${Utils.fmtWhen(d)}</div>
+        <div class="dim">${map[d].slice(0,4).map(Utils.esc).join(', ')}${map[d].length > 4 ? ` +${map[d].length-4}` : ''}</div>
+      </div>
+      <span class="duechip">${map[d].length}</span>
+    </div>`).join('');
+}
+
+function dayStreak(){
+  let n = 0;
+  let cur = Utils.today();
+  const active = d => { const h = Store.db.history[d]; return h && ((h.reviewed||0) + (h.learned||0)) > 0; };
+  if(!active(cur)) cur = Utils.addDays(cur, -1);
+  while(active(cur)){ n++; cur = Utils.addDays(cur, -1); }
+  return n;
+}
+
+function nextUpText(){
+  const next = Store.db.words
+    .filter(w => w.status === 'learning' && w.nextReview)
+    .sort((a,b) => a.nextReview.localeCompare(b.nextReview))[0];
+  return next
+    ? `Наступні слова — ${Utils.fmtWhen(next.nextReview)}.`
+    : `Почніть вивчати слова, і вони з'являться тут за розкладом.`;
+}
+
+function plural(n, one, few, many){
+  const a = n % 10, b = n % 100;
+  if(a === 1 && b !== 11) return one;
+  if(a >= 2 && a <= 4 && (b < 10 || b >= 20)) return few;
+  return many;
+}
+
+function hl(sentence, word){
+  const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return Utils.esc(sentence).replace(new RegExp(`\\b(${safe}\\w*)\\b`, 'gi'), '<b>$1</b>');
+}
+
+/* views/reading.js — тексти для читання: власні або згенеровані Claude.
+   Будь-яке слово в тексті можна натиснути й одразу додати у словник. */
+
+Views.register('reading', {
+  title: 'Читання',
+  tab: 'reading',
+  form: { title:'', body:'', topic:'', level:'B1', length:'150' },
+  state: { openId:null, loading:false, lookup:null },
+
+  render(){
+    if(this.state.openId){
+      const t = Store.getText(this.state.openId);
+      if(t) return this.detail(t);
+      this.state.openId = null;
+    }
+    return this.generatorCard() + this.manualCard() + this.listCard();
+  },
+
+  /* ---------- генерація тексту ---------- */
+  generatorCard(){
+    const f = this.form, e = Utils.esc;
+    const pool = Store.db.words.filter(w => w.status !== 'mastered');
+
+    if(!Api.hasAI()){
+      return `<div class="card">
+        <div class="row between">
+          <span class="muted">✨ Автоматична генерація текстів під ваші слова</span>
+          <button class="btn ghost sm" data-act="toSettings">Підключити Claude API</button>
+        </div>
+      </div>`;
+    }
+
+    return `
+    <div class="card">
+      <h2>✨ Згенерувати текст</h2>
+      <p class="muted" style="margin-top:-4px">
+        ${pool.length
+          ? `Claude напише текст на обрану тему й рівень, природно вплітаючи слова, що ви зараз вивчаєте (${pool.length} доступно).`
+          : `У словнику ще немає активних слів — текст буде звичайним, під заданий рівень і тему.`}
+      </p>
+      <div class="row">
+        <label class="f" style="flex:1;min-width:160px"><span>Тема (необов'язково)</span>
+          <input data-model="topic" value="${e(f.topic)}" placeholder="подорож, робота, кіно…"></label>
+        <label class="f" style="width:110px"><span>Рівень</span>
+          <select data-model="level">
+            ${['A1','A2','B1','B2','C1'].map(l => `<option${f.level===l?' selected':''}>${l}</option>`).join('')}
+          </select></label>
+        <label class="f" style="width:120px"><span>Слів у тексті</span>
+          <select data-model="length">
+            ${['100','150','250','400'].map(l => `<option${f.length===l?' selected':''}>${l}</option>`).join('')}
+          </select></label>
+      </div>
+      <button class="btn cyan" data-act="generate" ${this.state.loading?'disabled':''}>
+        ${this.state.loading ? '<span class="spinner"></span> Генерую…' : 'Створити текст'}
+      </button>
+    </div>`;
+  },
+
+  /* ---------- ручне додавання ---------- */
+  manualCard(){
+    const f = this.form, e = Utils.esc;
+    return `
+    <div class="card">
+      <h2>Додати власний текст</h2>
+      <label class="f"><span>Назва</span>
+        <input data-model="title" value="${e(f.title)}" placeholder="A Trip to London"></label>
+      <label class="f"><span>Текст англійською</span>
+        <textarea data-model="body" placeholder="Вставте статтю, уривок з книги або власний текст…">${e(f.body)}</textarea></label>
+      <button class="btn cyan" data-act="saveText">Зберегти текст</button>
+    </div>`;
+  },
+
+  /* ---------- список ---------- */
+  listCard(){
+    const e = Utils.esc;
+    const texts = [...Store.db.texts].sort((a,b) => b.createdAt - a.createdAt);
+    return `
+    <div class="card">
+      <h2>Мої тексти (${texts.length})</h2>
+      ${texts.length === 0
+        ? '<div class="empty">Ще немає текстів.</div>'
+        : texts.map(t => `
+          <button class="textitem" data-act="open" data-id="${t.id}">
+            <div class="row between">
+              <b>${e(t.title)}</b>
+              ${t.source === 'ai' ? '<span class="badge">✨ згенеровано</span>' : ''}
+            </div>
+            <div class="muted">${countWords(t.body)} слів · ${knownShare(t.body)}% слів із вашого словника</div>
+          </button>`).join('')}
+    </div>`;
+  },
+
+  /* ---------- читання тексту ---------- */
+  detail(t){
+    const e = Utils.esc;
+    const lk = this.state.lookup;
+
+    return `
+    <div class="card" style="padding:12px 16px">
+      <div class="row between">
+        <button class="btn ghost sm" data-act="back">← До списку</button>
+        <div class="row">
+          <button class="btn ghost sm" data-act="readAloud">🔊 Прочитати вголос</button>
+          <button class="btn ghost sm" data-act="delText" data-id="${t.id}">✕ Видалити</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>${e(t.title)}</h2>
+      <div class="reading-body">${tokenize(t.body)}</div>
+      <div class="dim" style="margin-top:16px">
+        Натисніть будь-яке слово, щоб подивитись його значення й додати у словник.
+        <span class="tok known" style="padding:1px 5px;border-radius:4px">так</span> — слова, які ви вже вивчаєте,
+        <span class="tok mastered" style="padding:1px 5px;border-radius:4px">так</span> — уже вивчені.
+      </div>
+    </div>
+
+    ${lk ? this.lookupCard(lk) : ''}`;
+  },
+
+  lookupCard(lk){
+    const e = Utils.esc;
+    const existing = Store.byWord(lk.word);
+
+    return `
+    <div class="card">
+      <div class="row between">
+        <h2 style="margin:0">${e(lk.word)}
+          ${lk.data?.phonetic ? `<span class="phon" style="margin-left:8px">${e(lk.data.phonetic)}</span>` : ''}</h2>
+        <button class="btn ghost sm" data-act="closeLookup">✕</button>
+      </div>
+
+      ${lk.loading ? '<div class="muted" style="margin-top:10px"><span class="spinner"></span> Шукаю у словнику…</div>' : ''}
+
+      ${lk.data?.definition ? `<div class="panel-mini"><div class="lbl">Визначення</div>${e(lk.data.definition)}</div>` : ''}
+      ${lk.data?.synonyms?.length ? `<div class="panel-mini"><div class="lbl">Синоніми</div>
+        <div class="chips">${lk.data.synonyms.slice(0,8).map(s=>`<span class="chip" style="color:var(--cyan)">${e(s)}</span>`).join('')}</div></div>` : ''}
+      ${lk.data?.antonyms?.length ? `<div class="panel-mini"><div class="lbl">Антоніми</div>
+        <div class="chips">${lk.data.antonyms.slice(0,8).map(s=>`<span class="chip" style="color:var(--violet-l)">${e(s)}</span>`).join('')}</div></div>` : ''}
+      ${lk.context ? `<div class="panel-mini"><div class="lbl">У цьому тексті</div><i>${e(lk.context)}</i></div>` : ''}
+
+      ${existing
+        ? `<div class="muted" style="margin-top:12px">Це слово вже у вашому словнику — ${e(existing.translation)} (${statusLabel(existing)}).</div>`
+        : `<label class="f" style="margin-top:12px"><span>Переклад українською</span>
+             <input id="lk-trans" value="${e(lk.translation || '')}" placeholder="введіть переклад"></label>
+           <div class="row">
+             <button class="btn cyan" data-act="addFromText">Додати у словник</button>
+             <button class="btn ghost" data-act="speakLookup">🔊</button>
+             ${Api.hasAI() ? `<button class="btn ghost" data-act="aiTranslate" ${lk.translating?'disabled':''}>
+                ${lk.translating ? '<span class="spinner"></span>' : '✨ Підказати переклад'}</button>` : ''}
+           </div>`}
+    </div>`;
+  },
+
+  actions: {
+    toSettings(){ App.go('more'); },
+
+    open(el, ds){
+      Views.map.reading.state.openId = ds.id;
+      Views.map.reading.state.lookup = null;
+      App.render(true);
+      window.scrollTo(0,0);
+    },
+
+    back(){
+      Views.map.reading.state.openId = null;
+      Views.map.reading.state.lookup = null;
+      App.render(true);
+    },
+
+    saveText(){
+      const v = Views.map.reading, f = v.form;
+      if(!f.title.trim() || !f.body.trim()){
+        Utils.toast('Потрібні і назва, і текст', 'err'); return;
+      }
+      Store.addText({title: f.title.trim(), body: f.body.trim(), source: 'manual'});
+      f.title = ''; f.body = '';
+      App.render();
+      Utils.toast('Текст збережено', 'ok');
+    },
+
+    async generate(){
+      const v = Views.map.reading, f = v.form;
+      const pool = Store.db.words.filter(w => w.status !== 'mastered');
+
+      v.state.loading = true; App.render();
+      try{
+        const words = pool.length ? Utils.pick(pool, Math.min(12, pool.length)) : [];
+        const res = await Api.generateText({words, level: f.level, topic: f.topic.trim(), length: f.length});
+        const t = Store.addText({title: res.title, body: res.body, source: 'ai'});
+        v.state.loading = false;
+        v.state.openId = t.id;
+        App.render(true);
+        Utils.toast('Текст готовий', 'ok');
+      }catch(err){
+        v.state.loading = false; App.render();
+        Utils.toast('Не вдалося згенерувати: ' + err.message, 'err');
+      }
+    },
+
+    delText(el, ds){
+      App.confirm('Видалити цей текст?', () => {
+        Store.removeText(ds.id);
+        Views.map.reading.state.openId = null;
+        App.render();
+      });
+    },
+
+    readAloud(){
+      const t = Store.getText(Views.map.reading.state.openId);
+      if(t) Utils.speakForce(t.body);
+    },
+
+    /* натиснули слово в тексті */
+    async token(el, ds){
+      const v = Views.map.reading;
+      const word = ds.w;
+      v.state.lookup = {word, loading:true, data:null, context: sentenceAround(el), translation:''};
+      App.render();
+
+      try{
+        const data = await Api.lookup(word);
+        if(v.state.lookup && v.state.lookup.word === word) v.state.lookup.data = data;
+      }catch(e){ /* словник недоступний — залишаємо ручне введення */ }
+      finally{
+        if(v.state.lookup) v.state.lookup.loading = false;
+        App.render();
+      }
+    },
+
+    closeLookup(){ Views.map.reading.state.lookup = null; App.render(); },
+    speakLookup(){ const lk = Views.map.reading.state.lookup; if(lk) Utils.speak(lk.word); },
+
+    async aiTranslate(){
+      const v = Views.map.reading, lk = v.state.lookup;
+      if(!lk) return;
+      lk.translating = true; App.render();
+      try{
+        const res = await Api.describe(lk.word);
+        lk.translation = res.translation || '';
+        if(!lk.data) lk.data = {phonetic:'', definition:'', synonyms:[], antonyms:[]};
+        if(!lk.data.definition) lk.data.definition = res.definition || '';
+        Utils.toast('Підказку додано', 'ok');
+      }catch(err){
+        Utils.toast('Помилка: ' + err.message, 'err');
+      }finally{
+        lk.translating = false; App.render();
+      }
+    },
+
+    addFromText(){
+      const v = Views.map.reading, lk = v.state.lookup;
+      if(!lk) return;
+      const input = document.getElementById('lk-trans');
+      const translation = (input?.value || '').trim();
+      if(!translation){ Utils.toast('Введіть переклад', 'err'); return; }
+
+      const w = Store.add({
+        word: lk.word, translation,
+        example: lk.context || '',
+        synonyms: lk.data?.synonyms || [],
+        antonyms: lk.data?.antonyms || [],
+        definition: lk.data?.definition || '',
+        phonetic: lk.data?.phonetic || '',
+        pos: lk.data?.pos || ''
+      });
+      w.status = 'learning';
+      w.enriched = !!lk.data;
+      Store.save();
+
+      v.state.lookup = null;
+      App.render();
+      Utils.toast(`«${lk.word}» додано у чергу вивчення`, 'ok');
+    }
+  }
+});
+
+/* ---------- допоміжні ---------- */
+
+function countWords(s){ return s.trim().split(/\s+/).filter(Boolean).length; }
+
+/* Частка слів тексту, що вже є у словнику */
+function knownShare(body){
+  const toks = body.toLowerCase().match(/[a-z']+/g) || [];
+  if(!toks.length) return 0;
+  const dict = new Set(Store.db.words.map(w => Utils.norm(w.word)));
+  const hits = toks.filter(t => dict.has(t)).length;
+  return Math.round(hits / toks.length * 100);
+}
+
+/* Розбиває текст на клікабельні слова й підсвічує ті, що вже у словнику.
+   Екрануємо кожен шматок окремо, щоб не зіпсувати HTML-сутності. */
+function tokenize(body){
+  const dict = new Map();
+  Store.db.words.forEach(w => dict.set(Utils.norm(w.word), w.status));
+
+  const plain = s => Utils.esc(s).replace(/\n/g, '<br>');
+  const re = /[A-Za-z][A-Za-z']*/g;
+  let out = '', last = 0, m;
+
+  while((m = re.exec(body)) !== null){
+    out += plain(body.slice(last, m.index));
+    const status = dict.get(m[0].toLowerCase());
+    const cls = status === 'mastered' ? 'tok mastered' : status ? 'tok known' : 'tok';
+    out += `<span class="${cls}" data-act="token"` +
+           ` data-w="${Utils.esc(m[0].toLowerCase())}" data-at="${m.index}">${Utils.esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + plain(body.slice(last));
+}
+
+/* Витягує речення, у якому стоїть натиснуте слово, за його позицією в тексті */
+function sentenceAround(el){
+  const t = Store.getText(Views.map.reading.state.openId);
+  if(!t || !el || el.dataset.at === undefined) return '';
+
+  const body = t.body;
+  const pos = parseInt(el.dataset.at, 10);
+  const start = Math.max(
+    body.lastIndexOf('.', pos - 1),
+    body.lastIndexOf('!', pos - 1),
+    body.lastIndexOf('?', pos - 1),
+    body.lastIndexOf('\n', pos - 1)
+  ) + 1;
+
+  const ends = ['.', '!', '?'].map(ch => body.indexOf(ch, pos)).filter(i => i !== -1);
+  const end = ends.length ? Math.min(...ends) + 1 : body.length;
+
+  return body.slice(start, end).trim();
+}
+
+/* views/lists.js — набори слів та перегляд окремого набору */
+
+Views.register('lists', {
+  title: 'Набори слів',
+  tab: 'lists',
+  form: { q:'' },
+
+  render(){
+    const q = Utils.norm(this.form.q);
+    const st = Store.stats();
+
+    const builtin = [
+      {id:'all',      name:'Усі слова',        icon:'📚'},
+      {id:'custom',   name:'Мої слова',        icon:'✍️'},
+      {id:'favorite', name:'Обране',           icon:'⭐'}
+    ];
+
+    const rows = [
+      ...builtin,
+      ...Store.db.lists.map(l => ({id:l.id, name:l.name, icon:'🗂', removable:!l.builtin}))
+    ].filter(r => !q || Utils.norm(r.name).includes(q));
+
+    return `
+    <input data-model="q" data-live="1" value="${Utils.esc(this.form.q)}"
+           placeholder="🔍 Пошук набору" style="margin-bottom:14px">
+
+    ${rows.map(r => {
+      const pct = Store.listProgress(r.id);
+      const n = Store.listWords(r.id).length;
+      return `
+      <button class="listrow" data-act="open" data-id="${r.id}">
+        <div class="thumb" style="background:${Utils.cover(r.name)}">${r.icon}</div>
+        <div class="meta">
+          <div class="nm">${Utils.esc(r.name)}</div>
+          <div class="bar"><div style="width:${pct}%"></div></div>
+          <div class="pc">${pct}% · ${n} слів</div>
+        </div>
+        <span class="chev">›</span>
+      </button>`;
+    }).join('')}
+
+    <button class="btn ghost" data-act="import" style="margin-top:6px">⬆ Завантажити таблицю слів</button>
+
+    <div class="statgrid" style="margin-top:18px">
+      <div class="stat"><b>${st.total}</b><span>слів усього</span></div>
+      <div class="stat"><b style="color:var(--cyan)">${st.coverage}%</b><span>опрацьовано</span></div>
+      <div class="stat"><b style="color:var(--gold)">${st.gems}</b><span>самоцвітів</span></div>
+    </div>`;
+  },
+
+  actions: {
+    open(el, ds){ App.push('list', {id: ds.id}); },
+    import(){ App.go('more'); Utils.toast('Розділ імпорту таблиць'); }
+  }
+});
+
+/* ---------- перегляд одного набору ---------- */
+Views.register('list', {
+  title: 'Набір',
+  tab: 'lists',
+  back: true,
+  form: { q:'' },
+  state: { filter:'all' },
+
+  render(p){
+    const all = Store.listWords(p.id);
+    const f = this.state.filter;
+    const q = Utils.norm(this.form.q);
+
+    const words = all.filter(w => {
+      if(f !== 'all' && w.status !== f) return false;
+      if(q && !Utils.norm(w.word).includes(q) && !Utils.norm(w.translation).includes(q)) return false;
+      return true;
+    });
+
+    const list = Store.db.lists.find(l => l.id === p.id);
+    const cnt = s => all.filter(w => w.status === s).length;
+
+    const chip = (id, label, n) =>
+      `<button class="chip ${f===id?'on':''}" data-act="filter" data-v="${id}">${label} ${n}</button>`;
+
+    return `
+    <input data-model="q" data-live="1" value="${Utils.esc(this.form.q)}"
+           placeholder="🔍 Пошук слова" style="margin-bottom:12px">
+
+    <div class="chips" style="justify-content:flex-start;margin-bottom:14px">
+      ${chip('all','Усі', all.length)}
+      ${chip('new','Нові', cnt('new'))}
+      ${chip('learning','Вивчаю', cnt('learning'))}
+      ${chip('mastered','Вивчено', cnt('mastered'))}
+    </div>
+
+    ${words.length === 0
+      ? `<div class="empty">Нічого не знайдено</div>`
+      : `<div class="tilegrid">
+          ${words.slice(0, 300).map(w => {
+            const cls = w.status === 'mastered' ? 'done'
+                      : w.status === 'learning' ? 'learn' : '';
+            return `<button class="tile ${cls}" data-act="open" data-id="${w.id}">${Utils.esc(w.word)}</button>`;
+          }).join('')}
+         </div>
+         ${words.length > 300 ? `<div class="center dim" style="margin-top:12px">Показано перші 300 із ${words.length}</div>` : ''}`}
+
+    ${list && !list.builtin
+      ? `<button class="btn link" data-act="delList" style="margin-top:16px">Видалити набір</button>` : ''}`;
+  },
+
+  actions: {
+    filter(el, ds){ Views.map.list.state.filter = ds.v; App.render(); },
+
+    open(el, ds){
+      const p = App.params();
+      const queue = Store.listWords(p.id).map(w => w.id);
+      App.push('triage', {queue, at: queue.indexOf(ds.id)});
+    },
+
+    delList(){
+      const p = App.params();
+      const l = Store.db.lists.find(x => x.id === p.id);
+      App.confirm(`Видалити набір «${l.name}»? Слова залишаться у словнику.`, () => {
+        Store.removeList(p.id);
+        App.back();
+      });
+    }
+  }
+});
+
+/* views/more.js — додавання власних слів, імпорт таблиць, налаштування */
+
+Views.register('more', {
+  title: 'WordMap',
+  tab: 'more',
+  form: { word:'', translation:'', example:'', table:'', listName:'', fbConfig:'', genTopic:'', genLevel:'B1', genLength:'150' },
+  state: { busy:false, found:null, bulk:null, cloudBusy:false, synList:[], antList:[], addAsWords:true, addingWord:false, genLoading:false },
+
+  render(){
+    const s = Store.db.settings, st = Store.stats(), f = this.form, vs = this.state;
+    const e = Utils.esc;
+
+    return `
+    <div class="cols c2">
+    <div>
+    <h3>Додати своє слово</h3>
+    <div class="card">
+      <div class="row">
+        <label class="f" style="flex:2;min-width:130px"><span>Слово англійською</span>
+          <input data-model="word" value="${e(f.word)}" placeholder="reluctant" autocomplete="off"></label>
+        <label class="f" style="flex:2;min-width:130px"><span>Переклад українською</span>
+          <input data-model="translation" value="${e(f.translation)}" placeholder="неохочий"></label>
+        <label class="f" style="flex:3;min-width:160px"><span>Приклад (необов'язково)</span>
+          <input data-model="example" value="${e(f.example)}" placeholder="He was reluctant to go."></label>
+      </div>
+      <div class="row">
+        <button class="btn cyan" data-act="addWord" ${vs.addingWord?'disabled':''}>
+          ${vs.addingWord ? '<span class="spinner"></span>' : 'Додати'}
+        </button>
+        <button class="btn ghost" data-act="lookup" ${vs.busy?'disabled':''}>
+          ${vs.busy ? '<span class="spinner"></span>' : '🔍'}
+        </button>
+      </div>
+      ${vs.found ? `<div class="muted" style="margin-top:12px;line-height:1.55">
+        ${e(vs.found.definition || '')}
+        ${vs.found.translation ? `<div style="margin-top:4px">Підказка AI: ${e(vs.found.translation)}</div>` : ''}
+        ${vs.found.synonyms.length ? `<div class="chips" style="justify-content:flex-start;margin-top:8px">
+          ${vs.found.synonyms.slice(0,6).map(x=>`<span class="chip" style="color:var(--cyan)">${e(x)}</span>`).join('')}
+        </div>` : ''}</div>` : ''}
+
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1;min-width:170px">
+          <label class="f"><span>Синоніми (необов'язково)</span>
+            <div class="row">
+              <input id="syn-input" placeholder="eager" autocomplete="off" style="flex:1;width:auto;min-width:0"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();document.querySelector('[data-act=addSynChip]').click();}">
+              <button class="btn ghost sm" data-act="addSynChip" style="width:auto;padding:0 16px">+</button>
+            </div></label>
+          ${vs.synList.length ? `<div class="chips" style="justify-content:flex-start;margin:-4px 0 4px">
+            ${vs.synList.map((x,i) => `<span class="chip" style="color:var(--cyan)">${e(x)}
+              <button data-act="removeSynChip" data-i="${i}" style="background:none;border:none;color:inherit;font-size:15px;cursor:pointer;margin-left:6px;padding:0">×</button></span>`).join('')}
+          </div>` : ''}
+        </div>
+        <div style="flex:1;min-width:170px">
+          <label class="f"><span>Антоніми (необов'язково)</span>
+            <div class="row">
+              <input id="ant-input" placeholder="willing" autocomplete="off" style="flex:1;width:auto;min-width:0"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();document.querySelector('[data-act=addAntChip]').click();}">
+              <button class="btn ghost sm" data-act="addAntChip" style="width:auto;padding:0 16px">+</button>
+            </div></label>
+          ${vs.antList.length ? `<div class="chips" style="justify-content:flex-start;margin:-4px 0 4px">
+            ${vs.antList.map((x,i) => `<span class="chip" style="color:var(--violet-l)">${e(x)}
+              <button data-act="removeAntChip" data-i="${i}" style="background:none;border:none;color:inherit;font-size:15px;cursor:pointer;margin-left:6px;padding:0">×</button></span>`).join('')}
+          </div>` : ''}
+        </div>
+      </div>
+
+      ${(vs.synList.length || vs.antList.length) ? `<label class="chk" style="margin-top:6px">
+        <input type="checkbox" data-act="tglAddAsWords" ${vs.addAsWords!==false?'checked':''}>
+        <span>Додати їх окремими словами в словник (кожен — своя картка й нагадування)</span></label>` : ''}
+    </div>
+    </div>
+
+    <div>
+    <h3>Згенерувати текст для читання</h3>
+    <div class="card">
+      ${Api.hasAI() ? `
+        <p class="muted" style="margin:0 0 12px;line-height:1.6">
+          Claude напише текст на обрану тему й рівень, природно вплітаючи слова, що ви зараз вивчаєте.
+        </p>
+        <div class="row">
+          <label class="f" style="flex:1;min-width:160px"><span>Тема (необов'язково)</span>
+            <input data-model="genTopic" value="${e(f.genTopic)}" placeholder="подорож, робота, кіно…"></label>
+          <label class="f" style="width:110px"><span>Рівень</span>
+            <select data-model="genLevel">
+              ${['A1','A2','B1','B2','C1'].map(l => `<option${f.genLevel===l?' selected':''}>${l}</option>`).join('')}
+            </select></label>
+          <label class="f" style="width:120px"><span>Слів у тексті</span>
+            <select data-model="genLength">
+              ${['100','150','250','400'].map(l => `<option${f.genLength===l?' selected':''}>${l}</option>`).join('')}
+            </select></label>
+        </div>
+        <button class="btn cyan" data-act="generateHome" ${vs.genLoading?'disabled':''}>
+          ${vs.genLoading ? '<span class="spinner"></span> Генерую…' : 'Створити текст'}
+        </button>`
+      : `<div class="row between">
+          <span class="muted">✨ Автоматична генерація текстів під ваші слова</span>
+          <span class="dim">додайте ключ Claude API нижче, щоб увімкнути</span>
+        </div>`}
+    </div>
+    </div>
+    </div>
+
+    <h3>Перейти</h3>
+    <div class="cols c3">
+      ${navCard('learn',  '🎓', 'Вчити',        st.toLearn)}
+      ${navCard('tests',  '🧪', 'Тести',        '')}
+      ${navCard('map',    '🗺', 'Карта знань',  '')}
+      ${navCard('review', '🔁', 'Повторення',   st.due)}
+      ${navCard('reading','📖', 'Читання',      '')}
+      ${navCard('lists',  '📋', 'Набори',       '')}
+    </div>
+
+    <h3>Статистика</h3>
+    <div class="card">
+      <div class="statgrid">
+        <div class="stat"><b>${st.total}</b><span>слів</span></div>
+        <div class="stat"><b>${st.learning}</b><span>вивчаю</span></div>
+        <div class="stat"><b>${st.mastered}</b><span>вивчено</span></div>
+        <div class="stat"><b>${st.gems}</b><span>самоцвітів</span></div>
+      </div>
+      <div class="dim" style="margin-top:12px">Карта пройдена на ${st.coverage}%</div>
+    </div>
+
+    <details class="more-fold">
+      <summary>Все інше — хмара, імпорт, налаштування, ключ AI, резервна копія</summary>
+
+    <h3>Хмара (Firebase) — доступ з кількох пристроїв</h3>
+    <div class="card">
+      ${this.cloudCard()}
+    </div>
+
+    <h3>Завантажити таблицю слів</h3>
+    <div class="card">
+      <p class="muted" style="margin:0 0 12px;line-height:1.6">
+        По одному слову на рядок. Колонки через кому, крапку з комою або табуляцію:<br>
+        <span class="dim">слово, переклад, частина мови, визначення, приклад</span><br>
+        Заповнювати треба лише перші дві — решта необов'язкова.
+      </p>
+      <label class="f"><span>Назва набору (необов'язково)</span>
+        <input data-model="listName" value="${e(f.listName)}" placeholder="Наприклад: IELTS Vocabulary"></label>
+      <label class="f"><span>Вставте таблицю</span>
+        <textarea data-model="table" placeholder="reluctant, неохочий, adj, unwilling to do something, He was reluctant to admit it.
+thorough, ретельний
+vivid, яскравий">${e(f.table)}</textarea></label>
+      <div class="row">
+        <button class="btn cyan" data-act="importText">Імпортувати</button>
+        <button class="btn ghost" data-act="pickFile">📄 З файлу</button>
+      </div>
+      <input type="file" id="file-table" accept=".csv,.tsv,.txt" class="hidden">
+    </div>
+
+    <h3>Масове збагачення словника</h3>
+    <div class="card">
+      <p class="muted" style="margin:0 0 12px;line-height:1.6">
+        Підтягує визначення, приклади, синоніми й антоніми одразу для всіх слів без
+        даних — спершу з відкритих словників, ключ для цього не потрібен.
+        ${s.apiKey
+          ? 'Якщо слова там немає — дані генерує Claude AI вашим ключем.'
+          : 'Додайте ключ Claude API нижче, щоб для слів, яких немає у відкритих словниках, дані генерувались через AI.'}
+        Це потрібно, щоб працювали тести «Слово в реченні», «За визначенням», «Синонім», «Антонім».
+      </p>
+      ${this.bulkCard()}
+    </div>
+
+    <h3>Налаштування</h3>
+    <div class="card">
+      <label class="chk"><input type="checkbox" data-act="tgl" data-v="tts" ${s.tts?'checked':''}>
+        <span>Озвучувати слова</span></label>
+      <label class="chk"><input type="checkbox" data-act="tgl" data-v="autoEnrich" ${s.autoEnrich?'checked':''}>
+        <span>Автоматично тягнути визначення й синоніми</span></label>
+      <label class="f"><span>Слів у клітинці карти знань</span>
+        <select data-act="bandSize">
+          ${[50,100,200].map(n=>`<option value="${n}"${s.bandSize===n?' selected':''}>${n}</option>`).join('')}
+        </select></label>
+    </div>
+
+    <h3>Claude API <span style="text-transform:none;letter-spacing:0">— необов'язково</span></h3>
+    <div class="card">
+      <p class="muted" style="margin:0 0 12px;line-height:1.6">
+        Потрібен для екрана «Порівняти» (пояснення різниці між синонімами), для
+        генерації текстів у розділі «Читання», а також щоб автоматично добирати
+        переклад, визначення, синоніми й антоніми для слів, яких немає у відкритих
+        словниках — при масовому збагаченні й при доданні власного слова.
+        Визначення, приклади й синоніми з відкритих словників працюють і без нього.
+      </p>
+      <label class="f"><span>Ключ API</span>
+        <input type="password" id="api-key" value="${e(s.apiKey)}" placeholder="sk-ant-…" autocomplete="off"></label>
+      <label class="f"><span>Модель</span>
+        <select data-act="model">
+          ${['claude-opus-5','claude-sonnet-5','claude-haiku-4-5'].map(m =>
+            `<option value="${m}"${s.model===m?' selected':''}>${m}</option>`).join('')}
+        </select></label>
+      <button class="btn ghost" data-act="saveKey">Зберегти ключ</button>
+    </div>
+
+    <h3>Резервна копія</h3>
+    <div class="card">
+      <div class="row">
+        <button class="btn ghost sm" data-act="export" style="flex:1">⬇ Експорт</button>
+        <button class="btn ghost sm" data-act="pickImport" style="flex:1">⬆ Імпорт</button>
+      </div>
+      <input type="file" id="file-json" accept=".json" class="hidden">
+      <button class="btn link" data-act="wipe" style="margin-top:8px">Скинути всі дані</button>
+    </div>
+    </details>`;
+  },
+
+  cloudCard(){
+    const s = this.state, f = this.form, e = Utils.esc;
+    const configured = typeof Cloud !== 'undefined' && Cloud.isConfigured();
+
+    if(!configured){
+      return `
+      <p class="muted" style="margin:0 0 12px;line-height:1.6">
+        Дані зберігаються не в браузері, а на сервері — і оновлюються в
+        реальному часі: якщо цю ж сторінку відкриють ще на одному пристрої,
+        зміни з'являться там одразу, без перезавантаження. Входу немає:
+        це один спільний набір даних для всіх, хто відкриє сайт.
+      </p>
+      <p style="color:var(--bad);font-size:13px;line-height:1.6;margin:0 0 12px">
+        ⚠ Без входу дані не приватні: будь-хто, хто знає адресу сайту,
+        може їх бачити й змінювати. Не підключайте так нічого, що має
+        лишатись особистим.
+      </p>
+      <label class="f"><span>Конфігурація проєкту (вставте як є з консолі Firebase)</span>
+        <textarea data-model="fbConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}'>${e(f.fbConfig)}</textarea></label>
+      <button class="btn cyan" data-act="connectFirebase" ${s.cloudBusy?'disabled':''}>
+        ${s.cloudBusy ? '<span class="spinner"></span>' : 'Підключити'}
+      </button>
+
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:13.5px">Як отримати конфігурацію?</summary>
+        <ol class="muted" style="margin:10px 0 0;padding-left:18px;line-height:1.8;font-size:13.5px">
+          <li>Відкрийте <b>console.firebase.google.com</b> → створіть проєкт</li>
+          <li>На головній сторінці проєкту натисніть значок <b>&lt;/&gt;</b> («Веб-застосунок»), дайте йому назву</li>
+          <li>Скопіюйте об'єкт <code>firebaseConfig</code> і вставте його сюди повністю</li>
+          <li><b>Build → Firestore Database → Create database</b> (Native mode, будь-який регіон)</li>
+          <li>У Firestore відкрийте вкладку <b>Rules</b> і вставте:
+            <pre style="white-space:pre-wrap;background:var(--surf2);padding:8px;border-radius:6px;margin-top:6px">rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /shared/wordmap {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+            <span class="dim">Це правило навмисно відкрите — без нього ніхто, включно з вами на іншому пристрої, не зможе читати чи писати дані.</span>
+          </li>
+        </ol>
+      </details>`;
+    }
+
+    return `
+      <div class="row between">
+        <span class="muted">✓ Підключено — дані спільні й оновлюються в реальному часі</span>
+        <button class="btn link" data-act="forgetFirebase">Відключити</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost sm" data-act="cloudPush" ${s.cloudBusy?'disabled':''}>🔄 Синхронізувати зараз</button>
+      </div>
+      <div class="dim" style="margin-top:8px">Кожна зміна автоматично зберігається на сервері й миттєво з'являється в усіх, хто зараз відкрив сайт.</div>`;
+  },
+
+  bulkCard(){
+    const bulk = this.state.bulk;
+    const missing = wordsNeedingData().length;
+
+    if(bulk && bulk.running){
+      const pct = Math.round(bulk.done / bulk.total * 100);
+      return `
+        <div class="progressbar"><div style="width:${pct}%"></div></div>
+        <div class="row between">
+          <span class="muted">${bulk.done} / ${bulk.total} · додано даних: ${bulk.added}</span>
+          <button class="btn ghost sm" data-act="cancelEnrich">Зупинити</button>
+        </div>`;
+    }
+
+    if(!missing) return `<div class="muted">Усі слова вже мають дані словника ✓</div>`;
+
+    return `<button class="btn cyan" data-act="enrichAll">Збагатити всі слова (${missing} без даних)</button>`;
+  },
+
+  actions: {
+    /* Генерація тексту прямо з головної — та сама логіка, що й на сторінці
+       «Читання», але з власними полями форми; готовий текст одразу
+       відкривається на сторінці «Читання». */
+    async generateHome(){
+      const v = Views.map.more, f = v.form;
+      const pool = Store.db.words.filter(w => w.status !== 'mastered');
+
+      v.state.genLoading = true; App.render();
+      try{
+        const words = pool.length ? Utils.pick(pool, Math.min(12, pool.length)) : [];
+        const res = await Api.generateText({words, level: f.genLevel, topic: f.genTopic.trim(), length: f.genLength});
+        const t = Store.addText({title: res.title, body: res.body, source: 'ai'});
+        v.state.genLoading = false;
+        Utils.toast('Текст готовий', 'ok');
+        App.go('reading');
+        Views.map.reading.state.openId = t.id;
+        App.render(true);
+      }catch(err){
+        v.state.genLoading = false; App.render();
+        Utils.toast('Не вдалося згенерувати: ' + err.message, 'err');
+      }
+    },
+
+    async lookup(){
+      const v = Views.map.more;
+      const word = v.form.word.trim();
+      if(!word){ Utils.toast('Введіть слово', 'err'); return; }
+      v.state.busy = true; App.render();
+      try{
+        let r = await Api.lookup(word);
+        let viaAI = false;
+        if((!r || (!r.definition && !r.synonyms.length)) && Api.hasAI()){
+          try{
+            const ai = await Api.aiLookup(word);
+            if(ai.definition || ai.translation){ r = ai; viaAI = true; }
+          }catch(e){ /* AI недоступний — лишаємось без результату */ }
+        }
+        v.state.found = r;
+        if(r){
+          if(!v.form.translation && r.translation) v.form.translation = r.translation;
+          if(!v.form.example && r.example) v.form.example = r.example;
+          Utils.toast(viaAI ? 'Згенеровано через AI' : 'Знайдено визначення', 'ok');
+        } else {
+          Utils.toast('Нічого не знайдено', 'err');
+        }
+      }catch(e){ Utils.toast('Помилка пошуку', 'err'); }
+      finally{ v.state.busy = false; App.render(); }
+    },
+
+    addSynChip(){
+      const v = Views.map.more;
+      const inp = document.getElementById('syn-input');
+      const val = (inp?.value || '').trim();
+      if(!val) return;
+      if(!v.state.synList.some(x => Utils.norm(x) === Utils.norm(val))) v.state.synList.push(val);
+      App.render();
+    },
+    addAntChip(){
+      const v = Views.map.more;
+      const inp = document.getElementById('ant-input');
+      const val = (inp?.value || '').trim();
+      if(!val) return;
+      if(!v.state.antList.some(x => Utils.norm(x) === Utils.norm(val))) v.state.antList.push(val);
+      App.render();
+    },
+    removeSynChip(el, ds){
+      const v = Views.map.more;
+      v.state.synList.splice(+ds.i, 1);
+      App.render();
+    },
+    removeAntChip(el, ds){
+      const v = Views.map.more;
+      v.state.antList.splice(+ds.i, 1);
+      App.render();
+    },
+    tglAddAsWords(el){ Views.map.more.state.addAsWords = el.checked; },
+
+    /* Додає слово, а якщо вказані синоніми/антоніми — за бажанням
+       створює для кожного з них окрему картку в словнику. Дані для цих
+       окремих слів добираються так само: спершу відкритий словник,
+       якщо там нічого немає — AI (за наявності ключа). Кожне нове слово
+       одразу отримує нагадування на завтра, без окремого етапу «черги». */
+    async addWord(){
+      const v = Views.map.more, f = v.form;
+      const word = f.word.trim(), translation = f.translation.trim();
+      if(!word || !translation){ Utils.toast('Потрібні слово і переклад', 'err'); return; }
+      if(Store.has(word)){ Utils.toast(`«${word}» вже є у словнику`, 'err'); return; }
+
+      v.state.addingWord = true; App.render();
+
+      const d = v.state.found;
+      const synonyms = uniqueWords(v.state.synList, d?.synonyms || []);
+      const antonyms = uniqueWords(v.state.antList, d?.antonyms || []);
+
+      const w = Store.add({
+        word, translation, example: f.example.trim(),
+        definition: d?.definition || '', phonetic: d?.phonetic || '',
+        pos: d?.pos || '', synonyms, antonyms
+      });
+      w.status = 'learning';
+      w.nextReview = Utils.addDays(Utils.today(), 1);   // нагадування — від завтра
+
+      let created = 0;
+      if(v.state.addAsWords !== false){
+        const chips = uniqueWords(v.state.synList, v.state.antList);
+        for(const chip of chips){
+          if(Store.has(chip)) continue;
+          let data = null;
+          try{ data = await Api.lookup(chip); }catch(e){}
+          if((!data || (!data.definition && !data.synonyms.length)) && Api.hasAI()){
+            try{
+              const ai = await Api.aiLookup(chip);
+              if(ai.definition || ai.translation || ai.synonyms.length) data = ai;
+            }catch(e){}
+          }
+          const nw = Store.add({
+            word: chip,
+            translation: data?.translation || '',
+            definition: data?.definition || '',
+            example: data?.example || '',
+            phonetic: data?.phonetic || '',
+            pos: data?.pos || '',
+            synonyms: data?.synonyms || [],
+            antonyms: data?.antonyms || []
+          });
+          nw.status = 'learning';
+          nw.nextReview = Utils.addDays(Utils.today(), 1);
+          nw.enriched = !!(data && (data.definition || data.synonyms.length));
+          created++;
+        }
+      }
+      Store.save();
+
+      v.form.word = ''; v.form.translation = ''; v.form.example = '';
+      v.state.found = null; v.state.synList = []; v.state.antList = []; v.state.addingWord = false;
+      App.render();
+      Utils.toast(
+        created ? `«${word}» додано, ще ${created} слів окремо — усі на завтра`
+                : `«${word}» додано, нагадування — завтра`,
+        'ok'
+      );
+    },
+
+    importText(){
+      const v = Views.map.more, f = v.form;
+      const raw = f.table.trim();
+      if(!raw){ Utils.toast('Таблиця порожня', 'err'); return; }
+      doImport(raw, f.listName.trim());
+      v.form.table = ''; v.form.listName = '';
+      App.render();
+    },
+
+    pickFile(){
+      const inp = document.getElementById('file-table');
+      inp.onchange = () => {
+        const file = inp.files[0];
+        if(!file) return;
+        const r = new FileReader();
+        r.onload = () => {
+          const name = Views.map.more.form.listName.trim() || file.name.replace(/\.[^.]+$/, '');
+          doImport(String(r.result), name);
+          App.render();
+        };
+        r.readAsText(file);
+      };
+      inp.click();
+    },
+
+    tgl(el, ds){ Store.db.settings[ds.v] = el.checked; Store.save(); },
+    bandSize(el){ Store.db.settings.bandSize = +el.value; Store.save(); Utils.toast('Карту перебудовано'); },
+    model(el){ Store.db.settings.model = el.value; Store.save(); },
+
+    saveKey(){
+      const key = (document.getElementById('api-key')?.value || '').trim();
+      Store.db.settings.apiKey = key;
+      Store.save(); App.render();
+      Utils.toast(key ? 'Ключ збережено' : 'Ключ очищено', 'ok');
+    },
+
+    export(){
+      const blob = new Blob([Store.exportJSON()], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `wordmap-${Utils.today()}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      Utils.toast('Файл завантажено', 'ok');
+    },
+
+    pickImport(){
+      const inp = document.getElementById('file-json');
+      inp.onchange = () => {
+        const file = inp.files[0];
+        if(!file) return;
+        const r = new FileReader();
+        r.onload = () => App.confirm('Імпорт замінить усі поточні дані. Продовжити?', () => {
+          try{ Store.importJSON(String(r.result)); App.render(); Utils.toast('Дані імпортовано', 'ok'); }
+          catch(e){ Utils.toast('Помилка: ' + e.message, 'err'); }
+        });
+        r.readAsText(file);
+      };
+      inp.click();
+    },
+
+    wipe(){
+      App.confirm('Скинути весь прогрес і повернути стартовий банк слів?', () => {
+        Store.reset(); App.render(); Utils.toast('Дані скинуто');
+      });
+    },
+
+    enrichAll(){
+      const v = Views.map.more;
+      if(v.state.bulk && v.state.bulk.running) return;
+
+      const targets = wordsNeedingData();
+      if(!targets.length){ Utils.toast('Усі слова вже мають визначення й приклади', 'ok'); return; }
+
+      v.state.bulk = {running:true, done:0, total:targets.length, added:0, cancel:false};
+      App.render();
+      runBulkEnrich(targets, v.state.bulk);
+    },
+
+    cancelEnrich(){
+      const v = Views.map.more;
+      if(v.state.bulk) v.state.bulk.cancel = true;
+    },
+
+    async connectFirebase(){
+      const v = Views.map.more;
+      const raw = v.form.fbConfig.trim();
+      if(!raw){ Utils.toast('Вставте конфігурацію проєкту', 'err'); return; }
+
+      v.state.cloudBusy = true; App.render();
+      try{
+        const cfg = await Cloud.configure(raw);
+        Store.db.settings.firebaseConfig = JSON.stringify(cfg);
+        Store.db.settings.cloudDisabled = false;
+        Store.save();
+        startCloudWatch();
+        Utils.toast('Підключено — дані тепер спільні й живі', 'ok');
+      }catch(err){
+        Utils.toast('Не вдалося підключити: ' + err.message, 'err');
+      }finally{
+        v.state.cloudBusy = false; App.render();
+      }
+    },
+
+    forgetFirebase(){
+      App.confirm('Відключити спільний сервер? Локальні дані на цьому пристрої залишаться недоторканими.', () => {
+        Store.db.settings.firebaseConfig = '';
+        Store.db.settings.cloudDisabled = true;
+        Store.save();
+        location.reload();   // найпростіший спосіб коректно «забути» вже завантажений SDK
+      });
+    },
+
+    async cloudPush(){
+      const v = Views.map.more;
+      v.state.cloudBusy = true; App.render();
+      try{ await Cloud.push(Store.db); Utils.toast('Синхронізовано', 'ok'); }
+      catch(err){ Utils.toast('Помилка: ' + err.message, 'err'); }
+      finally{ v.state.cloudBusy = false; App.render(); }
+    }
+  }
+});
+
+/* Підписка на живі оновлення спільного документа. Коли хтось (включно з
+   нами з іншої вкладки чи пристрою) змінює дані — застосовуємо їх одразу. */
+function startCloudWatch(){
+  Cloud.watch(remoteData => {
+    if(!remoteData || !Array.isArray(remoteData.words)) return;
+    Store.importObject(remoteData);
+    App.render(true);
+    Utils.toast('Дані оновлено з сервера');
+  });
+}
+
+/* Тягне дані з відкритих словників для великої кількості слів одразу.
+   Обмежена паралельність, щоб не заспамити безкоштовний API запитами. */
+async function runBulkEnrich(targets, bulk){
+  const CONCURRENCY = 5;
+  let idx = 0;
+
+  /* прогрес оновлюємо періодично, а не на кожне слово — 365 повних
+     перемальовувань екрана поспіль були б помітно повільними */
+  const ticker = setInterval(() => {
+    if(App.top().view === 'more') App.render();
+  }, 400);
+
+  async function worker(){
+    while(idx < targets.length && !bulk.cancel){
+      const w = targets[idx++];
+      try{
+        const r = await Api.enrich(w.id);
+        if(r) bulk.added++;
+      }catch(e){ /* пропускаємо слово, якщо словник не відповів */ }
+      bulk.done++;
+    }
+  }
+
+  await Promise.all(Array.from({length: CONCURRENCY}, worker));
+  clearInterval(ticker);
+  bulk.running = false;
+
+  if(App.top().view === 'more') App.render();
+  Utils.toast(
+    bulk.cancel ? `Зупинено на ${bulk.done} / ${bulk.total}` : `Збагачено ${bulk.added} з ${bulk.total}`,
+    'ok'
+  );
+}
+
+/* Слова, яким бракує визначення й прикладу — саме те, чого потребують тести
+   «Слово в реченні», «За визначенням» і карточки визначень. Навмисно НЕ
+   спираємось на прапор `enriched`: коли dictionaryapi.dev тимчасово
+   недоступний (трапляється), слово може отримати лише синоніми з Datamuse
+   і назавжди зникнути з черги збагачення, так і не діставши приклад. */
+function wordsNeedingData(){
+  return Store.db.words.filter(w => !w.definition && !w.example);
+}
+
+/* Кнопка-картка швидкого переходу на головній сторінці */
+function navCard(tabId, icon, label, badge){
+  return `<button class="navcard" data-act="__tab" data-v="${tabId}">
+    <div class="ic">${icon}</div>
+    <div class="lbl">${label}</div>
+    ${badge ? `<div class="badge">${badge}</div>` : ''}
+  </button>`;
+}
+
+/* Об'єднує кілька списків слів в один без повторів (порівняння без регістру) */
+function uniqueWords(...lists){
+  const seen = new Set(), out = [];
+  for(const list of lists) for(const x of (list || [])){
+    const n = Utils.norm(x);
+    if(n && !seen.has(n)){ seen.add(n); out.push(String(x).trim()); }
+  }
+  return out;
+}
+
+function doImport(raw, listName){
+  try{
+    const r = Store.importTable(raw, listName || null);
+    if(!r.added && !r.skipped){ Utils.toast('Не знайдено жодного рядка', 'err'); return; }
+    Utils.toast(`Додано ${r.added}, вже було ${r.skipped}`, 'ok');
+  }catch(e){
+    Utils.toast('Помилка імпорту: ' + e.message, 'err');
+  }
+}
+
+/* app.js — стек навігації, бічне меню, делеговані події */
+
+const App = (function(){
+
+  /* 'more' — це тепер головна сторінка (додати слово, згенерувати текст,
+     перейти, статистика, а все інше — внизу неї). Решта розділів більше не
+     мають постійної панелі — на них переходять карткою з головної, а
+     повертаються кнопкою «‹» вгорі (див. renderTop/backOrHome нижче). */
+  const TABS = [
+    {id:'more',    view:'more',    icon:'🏠', label:'Головна'},
+    {id:'map',     view:'map',     icon:'🗺', label:'Карта знань'},
+    {id:'learn',   view:'learn',   icon:'🎓', label:'Вчити'},
+    {id:'tests',   view:'tests',   icon:'🧪', label:'Тести'},
+    {id:'review',  view:'review',  icon:'🔁', label:'Повторення'},
+    {id:'reading', view:'reading', icon:'📖', label:'Читання'},
+    {id:'lists',   view:'lists',   icon:'📋', label:'Набори'}
+  ];
+  const HOME = 'more';
+
+  /* окремий стек екранів на кожен розділ */
+  const stacks = {};
+  TABS.forEach(t => stacks[t.id] = [{view: t.view, params: {}}]);
+  let tab = HOME;
+  let sheetActions = null;
+
+  const stack = () => stacks[tab];
+  const top = () => stack()[stack().length - 1];
+  const params = () => top().params;
+
+  /* ---------------- рендер ---------------- */
+  /* transition=true лише при переході між екранами (go/push/replace/back) —
+     не при кожному дрібному оновленні стану (набір тексту, галочка), щоб не
+     смикати весь блок і не заважати друкувати. */
+  function render(transition){
+    const cur = top();
+    const view = Views.map[cur.view];
+    if(!view) return;
+
+    const a = document.activeElement;
+    const key = a && a.dataset && a.dataset.model ? a.dataset.model : (a && a.id ? a.id : null);
+    const caret = a && typeof a.selectionStart === 'number' ? a.selectionStart : null;
+
+    const main = document.getElementById('main');
+    main.innerHTML = view.render(cur.params);
+    if(transition){
+      main.classList.remove('page-enter');
+      void main.offsetWidth;           // форсуємо reflow, щоб анімація перезапустилась
+      main.classList.add('page-enter');
+    }
+    renderTop(view);
+    renderNav();
+    if(view.mount) view.mount(cur.params);
+
+    if(key){
+      const el = document.querySelector(`[data-model="${key}"]`) || document.getElementById(key);
+      if(el && el.focus){
+        el.focus();
+        if(caret !== null && el.setSelectionRange){ try{ el.setSelectionRange(caret, caret); }catch(e){} }
+      }
+    }
+  }
+
+  function renderTop(view){
+    /* на самій головній назад повертатись нікуди; з будь-якого іншого
+       розділу «‹» веде або на попередній екран у його стеку, або одразу
+       на головну, якщо ми на самому корені розділу */
+    const canBack = stack().length > 1 || tab !== HOME;
+    const title = typeof view.title === 'function' ? view.title(params()) : view.title;
+    document.getElementById('topbar').innerHTML = `
+      <button class="tb-btn ${canBack ? '' : 'ghost'}" data-act="__back">‹</button>
+      <div class="tb-title">${Utils.esc(title || currentTabLabel())}</div>
+      <div class="gems"><span class="g">◆</span>${Store.db.gems}</div>`;
+  }
+
+  function currentTabLabel(){
+    const t = TABS.find(x => x.id === tab);
+    return t ? t.label : '';
+  }
+
+  function counts(){
+    return {
+      learn: Store.toLearn().length,
+      review: Store.due().length,
+      tests: 0, map: 0, lists: 0, more: 0, reading: 0
+    };
+  }
+
+  function renderNav(){
+    const n = counts();
+
+    document.getElementById('sidenav').innerHTML = TABS.map(t => `
+      <button class="${t.id === tab ? 'on' : ''}" data-act="__tab" data-v="${t.id}">
+        <i>${t.icon}</i>${t.label}
+        ${n[t.id] ? `<span class="n">${n[t.id] > 99 ? '99+' : n[t.id]}</span>` : ''}
+      </button>`).join('');
+
+    const st = Store.stats();
+    document.getElementById('sidefoot').innerHTML = `
+      <div class="side-stat">◆ <b>${st.gems}</b> самоцвітів</div>
+      <div class="side-stat">📈 <b>${st.coverage}%</b> карти пройдено</div>
+      <div class="side-stat">🎓 <b>${st.mastered}</b> вивчено</div>`;
+
+    document.getElementById('tabbar').innerHTML = TABS.map(t => `
+      <button class="${t.id === tab ? 'on' : ''}" data-act="__tab" data-v="${t.id}">
+        <i>${t.icon}</i>${t.label.split(' ')[0]}
+        ${n[t.id] ? `<span class="n">${n[t.id] > 99 ? '99+' : n[t.id]}</span>` : ''}
+      </button>`).join('');
+  }
+
+  /* ---------------- навігація ---------------- */
+  function go(tabId){
+    if(!stacks[tabId]) return;
+    /* повторний тап на вже активному розділі скидає його стек до кореня —
+       звичний патерн мобільних застосунків замість «нічого не робить» */
+    if(tabId === tab && stacks[tabId].length === 1) return;
+    if(tabId === tab) stacks[tabId].length = 1;
+    tab = tabId;
+    window.scrollTo(0,0);
+    render(true);
+  }
+
+  function push(view, p = {}){
+    stack().push({view, params: p});
+    resetViewState(view);
+    window.scrollTo(0,0);
+    render(true);
+  }
+
+  function replace(view, p = {}){
+    stack()[stack().length - 1] = {view, params: p};
+    window.scrollTo(0,0);
+    render(true);
+  }
+
+  function back(){
+    if(stack().length > 1){ stack().pop(); window.scrollTo(0,0); render(true); }
+  }
+
+  /* кнопка «‹» вгорі: спершу крок назад усередині розділу, а коли розділ
+     вже на своєму корені — повернення на головну сторінку */
+  function backOrHome(){
+    if(stack().length > 1) back();
+    else if(tab !== HOME) go(HOME);
+  }
+
+  /* екрани з власним станом скидаємо при новому вході */
+  function resetViewState(view){
+    const v = Views.map[view];
+    if(!v) return;
+    if(view === 'compare') v.state = {with:null, text:null, loading:false, error:''};
+    if(view === 'session') v.state = {shown:false, done:0, good:0};
+    if(view === 'list'){ v.state = {filter:'all'}; v.form = {q:''}; }
+  }
+
+  /* ---------------- модальний лист ---------------- */
+  function sheet(html, actions){
+    sheetActions = actions || null;
+    const el = document.getElementById('sheet');
+    el.innerHTML = `<div class="sheet">${html}</div>`;
+    el.classList.remove('hidden');
+    el.onclick = ev => { if(ev.target === el) closeSheet(); };
+  }
+
+  function closeSheet(){
+    sheetActions = null;
+    const el = document.getElementById('sheet');
+    el.classList.add('hidden');
+    el.innerHTML = '';
+  }
+
+  function confirm(message, onYes){
+    sheet(`
+      <div style="line-height:1.6;margin-bottom:22px;text-align:center">${Utils.esc(message)}</div>
+      <button class="btn violet wide" data-act="__yes">Так</button>
+      <button class="btn link wide" data-act="__no">Скасувати</button>`,
+      { __yes(){ closeSheet(); onYes(); }, __no(){ closeSheet(); } });
+  }
+
+  /* ---------------- делеговані події ---------------- */
+  const globals = { __back: backOrHome, __tab(el, ds){ go(ds.v); } };
+
+  /* Захист від подвійного спрацювання конкретної кнопки: дублікати click-подій
+     (наприклад touchend+click на мобільному, або фізичний тремор пальця) не
+     мають виконати дію двічі. Прив'язано до самого DOM-елемента, а не до назви
+     дії — після кожного render() з'являються нові елементи, тож послідовні
+     натискання на різні (навіть однойменні) кнопки одна за одною ніколи не
+     блокуються, лише справжній дубль-клік по одній і тій самій кнопці. */
+  const fireGuard = new WeakSet();
+  function isDuplicateClick(el){
+    if(fireGuard.has(el)) return true;
+    fireGuard.add(el);
+    setTimeout(() => fireGuard.delete(el), 400);
+    return false;
+  }
+
+  function dispatch(el, ev){
+    const name = el.dataset.act;
+    if(!name) return;
+
+    const isControl = el.matches('input[type=checkbox], select, input[type=file], input.note-input');
+    if(isControl !== (ev.type === 'change')) return;
+
+    const view = Views.map[top().view];
+    const fn = (sheetActions && sheetActions[name])
+            || (view && view.actions && view.actions[name])
+            || globals[name];
+    if(!fn) return;
+
+    if(ev.type === 'click'){
+      ev.preventDefault();
+      if(isDuplicateClick(el)) return;
+    }
+    fn.call(view, el, el.dataset);
+  }
+
+  document.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-act]');
+    if(el) dispatch(el, ev);
+  });
+  document.addEventListener('change', ev => {
+    const el = ev.target.closest('[data-act]');
+    if(el) dispatch(el, ev);
+  });
+
+  document.addEventListener('input', ev => {
+    const el = ev.target.closest('[data-model]');
+    if(!el) return;
+    const view = Views.map[top().view];
+    if(!view || !view.form) return;
+    view.form[el.dataset.model] = el.value;
+    if(el.dataset.live === '1') render();
+  });
+  document.addEventListener('change', ev => {
+    const el = ev.target.closest('select[data-model]');
+    if(!el) return;
+    const view = Views.map[top().view];
+    if(view && view.form){ view.form[el.dataset.model] = el.value; render(); }
+  });
+
+  window.addEventListener('popstate', () => {
+    if(stack().length > 1){ back(); history.pushState(null, ''); }
+  });
+
+  function boot(){
+    history.pushState(null, '');
+    /* завжди стартуємо з головної — там і так видно, чи є сьогодні робота
+       (лічильники на картках «Вчити»/«Повторення») */
+    tab = HOME;
+    render();
+
+    /* Підключення до спільного сховища: власний збережений конфіг має
+       перевагу, інакше — вбудований за замовчуванням. Якщо користувач сам
+       натиснув «Відключити», cloudDisabled=true і автопідключення не лізе. */
+    const s = Store.db.settings;
+    const cfg = s.firebaseConfig || (typeof DEFAULT_FIREBASE_CONFIG !== 'undefined' ? DEFAULT_FIREBASE_CONFIG : '');
+    if(cfg && !s.cloudDisabled && typeof Cloud !== 'undefined' && typeof startCloudWatch === 'function'){
+      Cloud.configure(cfg).then(() => {
+        if(!s.firebaseConfig){ s.firebaseConfig = cfg; Store.save(); }
+        startCloudWatch();
+      }).catch(() => {});
+    }
+  }
+
+  return { render, go, push, replace, back, boot, sheet, closeSheet, confirm, top, params };
+})();
+
+App.boot();
+
+</script>
+</body>
+</html>
